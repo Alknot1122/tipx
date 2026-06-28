@@ -13,7 +13,15 @@ router.post('/', express.raw({ type: 'application/json', limit: '16kb' }), (req,
   const sig = req.headers['x-hub-signature-256'] || '';
   const expected = 'sha256=' + crypto.createHmac('sha256', DEPLOY_SECRET).update(req.body).digest('hex');
 
-  if (!DEPLOY_SECRET || !crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) {
+  if (!DEPLOY_SECRET || sig.length !== expected.length) {
+    return res.status(403).json({ error: 'Forbidden.' });
+  }
+
+  try {
+    if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) {
+      return res.status(403).json({ error: 'Forbidden.' });
+    }
+  } catch (_) {
     return res.status(403).json({ error: 'Forbidden.' });
   }
 
