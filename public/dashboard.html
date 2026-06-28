@@ -982,7 +982,7 @@
 
     const phone = document.getElementById('preview-phone');
     if (bg && bg.startsWith('http')) {
-      phone.style.background = `linear-gradient(rgba(0,0,0,0.05),rgba(0,0,0,0.4)), url(${bg}) ${bgX}% ${bgY}%/${bgScale}% no-repeat`;
+      phone.style.background = `linear-gradient(rgba(0,0,0,0),rgba(0,0,0,0.2)), url(${bg}) ${bgX}% ${bgY}%/${bgScale}% no-repeat`;
       document.getElementById('pv-name').style.color = '#fff';
       document.getElementById('pv-handle').style.color = 'rgba(255,255,255,0.7)';
     } else if (color) {
@@ -1101,7 +1101,7 @@
   document.getElementById('bg-scale').addEventListener('input', updateProfilePreview);
 
   // Client-side image compression using Canvas API
-  function compressImage(file, maxWidth, maxHeight, quality = 0.85) {
+  function compressImage(file, maxWidth, maxHeight, quality = 0.92) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
@@ -1151,7 +1151,7 @@
 
     statusSpan.textContent = 'Compressing...';
     try {
-      const compressedBlob = await compressImage(file, maxWidth, maxHeight, 0.85);
+      const compressedBlob = await compressImage(file, maxWidth, maxHeight, 0.92);
       statusSpan.textContent = 'Uploading...';
 
       const formData = new FormData();
