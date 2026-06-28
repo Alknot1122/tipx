@@ -100,7 +100,50 @@ const getDonations = async (req, res) => {
   }
 };
 
-// ── POST /dashboard/:slug/donations/:id/replay ────────────────────────────────
+// ── POST /dashboard/:slug/donations/test-alert ────────────────────────────────
+const testAlert = async (req, res) => {
+  const { slug } = req.params;
+
+  try {
+    const { rows: userRows } = await query(
+      `SELECT id FROM users WHERE slug = $1`,
+      [slug]
+    );
+    if (!userRows.length) return res.status(404).json({ error: 'Not found.' });
+    const streamerId = userRows[0].id;
+
+    const { rows: wsRows } = await query(
+      `SELECT alert_config, progress_config, goal_amount, goal_current
+       FROM widget_settings WHERE streamer_id = $1`,
+      [streamerId]
+    );
+    const ws = wsRows[0] || {};
+
+    const io = require('../websockets/widgetSocket').getIO();
+    io.to(`streamer:${streamerId}`).emit('donation:alert', {
+      type: 'test',
+      donation: {
+        id: 0,
+        donor_name: 'TipX',
+        message: '🎉 Test Alert — your widget is working!',
+        amount: 5000,
+        currency: 'THB',
+        created_at: new Date().toISOString(),
+      },
+      alert_config: ws.alert_config || {},
+      progress: {
+        goal_amount: ws.goal_amount || 0,
+        goal_current: ws.goal_current || 0,
+        config: ws.progress_config || {},
+      },
+    });
+
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error('[Streamer] testAlert error:', err.message);
+    return res.status(500).json({ error: 'Internal server error.' });
+  }
+};
 // Re-broadcast a past donation alert to the OBS widget
 
 const replayDonation = async (req, res) => {
@@ -378,6 +421,7 @@ module.exports = {
   getDonations,
   replayDonation,
   deleteDonation,
+  testAlert,
   updateWidgetSettings,
   getStripeOnboardingLink,
   updateProfile,

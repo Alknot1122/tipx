@@ -6,6 +6,7 @@ const {
   getDonations,
   replayDonation,
   deleteDonation,
+  testAlert,
   updateWidgetSettings,
   getStripeOnboardingLink,
   updateProfile,
@@ -17,6 +18,7 @@ router.use('/:slug', requireAuth, requireSelf);
 
 router.get('/:slug',                          getDashboard);
 router.get('/:slug/donations',                getDonations);
+router.post('/:slug/donations/test-alert',     testAlert);
 router.post('/:slug/donations/:id/replay',    replayDonation);
 router.delete('/:slug/donations/:id',           deleteDonation);
 router.put('/:slug/widget',                   updateWidgetSettings);

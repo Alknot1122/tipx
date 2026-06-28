@@ -334,10 +334,16 @@
     <!-- Topbar -->
     <div class="topbar">
       <span class="page-title" id="topbar-title">Overview</span>
-      <button class="btn btn-ghost btn-sm" onclick="loadDonationsLog()">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38"/></svg>
-        Refresh
-      </button>
+      <div style="display:flex; gap:8px">
+        <button class="btn btn-primary btn-sm" onclick="testAlert()" style="background:var(--indigo); color:#fff; border-color:var(--indigo)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          Test Alert
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="loadDonationsLog()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38"/></svg>
+          Refresh
+        </button>
+      </div>
     </div>
 
     <div class="content">
@@ -746,8 +752,8 @@
             <div class="feed-right">
               <span class="feed-amount">${formatAmount(d.amount)}</span>
               ${feeInfo}
-              ${replay}
-              ${del}
+              <div style="display:flex; gap:4px; margin-top:6px">${replay}${del}</div>
+            </div>
           </div>`;
       });
       feed.innerHTML = html;
@@ -869,6 +875,13 @@
       await apiFetch(`/dashboard/${streamerSlug}/donations/${id}`, { method: 'DELETE' });
       showToast('Donation deleted.', 'success');
       await loadDonationsLog();
+    } catch (err) { showToast(err.message, 'error'); }
+  }
+
+  async function testAlert() {
+    try {
+      await apiFetch(`/dashboard/${streamerSlug}/donations/test-alert`, { method: 'POST' });
+      showToast('Test alert sent! Check OBS.', 'success');
     } catch (err) { showToast(err.message, 'error'); }
   }
 
