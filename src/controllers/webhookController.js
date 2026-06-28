@@ -134,12 +134,13 @@ const handlePaymentSucceeded = async (paymentIntent) => {
         }
       }
 
-      // Update progress bar running total
+      // Update progress bar — only count if donation is after goal_start_date (if set)
       await tx(
-        `UPDATE widget_settings
-         SET goal_current = LEAST(goal_current + $1, goal_amount)
+        `UPDATE widget_settings SET goal_current = 
+           CASE WHEN goal_start_date IS NULL OR $3::timestamptz >= goal_start_date
+                THEN LEAST(goal_current + $1, goal_amount) ELSE goal_current END
          WHERE streamer_id = $2`,
-        [donation.amount, parseInt(streamer_id)]
+        [donation.amount, parseInt(streamer_id), donation.created_at]
       );
 
       // Fetch widget config for the alert payload

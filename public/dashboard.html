@@ -518,6 +518,11 @@
                   <label class="label" for="goal-amount">Target amount (฿)</label>
                   <input class="input" type="number" id="goal-amount" min="0" placeholder="5000">
                 </div>
+                <div class="form-field">
+                  <label class="label" for="goal-start-date">Count from (optional)</label>
+                  <input class="input" type="date" id="goal-start-date">
+                  <div class="text-xs text-muted" style="margin-top:4px">Progress only counts donations after this date</div>
+                </div>
               </div>
             </div>
           </div>
@@ -691,6 +696,7 @@
       document.getElementById('alert-tts-volume-val').textContent = Math.round(vol * 100) + '%';
       document.getElementById('goal-label').value = currentProgressConfig.goal_label || '';
       document.getElementById('goal-amount').value = db.goal_amount / 100;
+      document.getElementById('goal-start-date').value = db.goal_start_date ? db.goal_start_date.split('T')[0] : '';
       document.getElementById('profile-slug').value = db.slug || '';
       document.getElementById('slug-preview').textContent = db.slug || '—';
       document.getElementById('profile-avatar').value = db.avatar_url || '';
@@ -827,7 +833,8 @@
             text_color: currentProgressConfig.text_color || '#FFFFFF',
             bg_color: currentProgressConfig.bg_color || '#ffffff'
           },
-          goal_amount: Math.round((parseFloat(document.getElementById('goal-amount').value)||0)*100)
+          goal_amount: Math.round((parseFloat(document.getElementById('goal-amount').value)||0)*100),
+          goal_start_date: document.getElementById('goal-start-date').value || null
         })
       });
       showToast('Settings saved.', 'success');

@@ -865,8 +865,11 @@
         gs.style.display = 'block';
         const cfg = s.progress_config || {};
         document.getElementById('goal-label').textContent = cfg.goal_label || 'Goal';
+        const dateStr = s.goal_start_date
+          ? ' since ' + new Date(s.goal_start_date).toLocaleDateString('en', {month:'short', day:'numeric'})
+          : '';
         document.getElementById('goal-amounts').textContent =
-          '฿' + (s.goal_current/100).toLocaleString() + ' / ฿' + (s.goal_amount/100).toLocaleString();
+          '฿' + (s.goal_current/100).toLocaleString() + ' / ฿' + (s.goal_amount/100).toLocaleString() + dateStr;
         const pct = Math.min((s.goal_current / s.goal_amount) * 100, 100);
         setTimeout(() => { document.getElementById('goal-fill').style.width = pct + '%'; }, 200);
       }

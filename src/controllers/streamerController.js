@@ -17,7 +17,7 @@ const getDashboard = async (req, res) => {
               u.stripe_account_id, u.stripe_onboarding_done,
               u.avatar_url, u.bg_color, u.bg_image_url,
               ws.alert_token, ws.alert_config, ws.progress_config,
-              ws.goal_amount, ws.goal_current
+              ws.goal_amount, ws.goal_current, ws.goal_start_date
        FROM users u
        LEFT JOIN widget_settings ws ON ws.streamer_id = u.id
        WHERE u.slug = $1 AND (u.role = 'streamer' OR u.role = 'admin') AND u.is_active = true`,
@@ -44,7 +44,7 @@ const getDashboard = async (req, res) => {
                 u.stripe_account_id, u.stripe_onboarding_done,
                 u.avatar_url, u.bg_color, u.bg_image_url,
                 ws.alert_token, ws.alert_config, ws.progress_config,
-                ws.goal_amount, ws.goal_current
+                ws.goal_amount, ws.goal_current, ws.goal_start_date
          FROM users u
          LEFT JOIN widget_settings ws ON ws.streamer_id = u.id
          WHERE u.id = $1`,
@@ -212,7 +212,7 @@ const deleteDonation = async (req, res) => {
 
 const updateWidgetSettings = async (req, res) => {
   const { slug } = req.params;
-  const { alert_config, progress_config, goal_amount } = req.body;
+  const { alert_config, progress_config, goal_amount, goal_start_date } = req.body;
 
   try {
     const { rows: userRows } = await query(
@@ -238,6 +238,10 @@ const updateWidgetSettings = async (req, res) => {
       updates.push(`goal_amount = $${idx++}`);
       values.push(parseInt(goal_amount));
     }
+    if (goal_start_date !== undefined) {
+      updates.push(`goal_start_date = $${idx++}`);
+      values.push(goal_start_date || null);
+    }
 
     if (!updates.length) return res.status(400).json({ error: 'Nothing to update.' });
 
@@ -246,6 +250,20 @@ const updateWidgetSettings = async (req, res) => {
       `UPDATE widget_settings SET ${updates.join(', ')} WHERE streamer_id = $${idx} RETURNING *`,
       values
     );
+
+    // Recalculate goal_current from history if start date was set/changed
+    if (goal_start_date !== undefined) {
+      const { rows: recalc } = await query(
+        `SELECT COALESCE(SUM(amount), 0)::INT as total FROM donations
+         WHERE streamer_id = $1 AND status = 'succeeded' AND created_at >= $2`,
+        [streamerId, goal_start_date || '1970-01-01']
+      );
+      await query(
+        `UPDATE widget_settings SET goal_current = $1 WHERE streamer_id = $2`,
+        [recalc[0].total, streamerId]
+      );
+      rows[0].goal_current = recalc[0].total;
+    }
 
     return res.json({ settings: rows[0] });
   } catch (err) {

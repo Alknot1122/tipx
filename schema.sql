@@ -75,6 +75,7 @@ CREATE TABLE widget_settings (
     }'::JSONB,
     goal_amount             INT          NOT NULL DEFAULT 0,        -- satang
     goal_current            INT          NOT NULL DEFAULT 0,        -- satang
+    goal_start_date         TIMESTAMPTZ,                            -- goal counts only donations after this date (NULL = all time)
     created_at              TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at              TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );

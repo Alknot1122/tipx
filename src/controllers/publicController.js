@@ -11,7 +11,7 @@ const getPublicPage = async (req, res) => {
     const { rows } = await query(
       `SELECT u.role, u.username, u.slug, u.stripe_account_id, u.stripe_onboarding_done,
               u.avatar_url, u.bg_color, u.bg_image_url,
-              ws.goal_amount, ws.goal_current, ws.progress_config
+              ws.goal_amount, ws.goal_current, ws.goal_start_date, ws.progress_config
        FROM users u
        LEFT JOIN widget_settings ws ON ws.streamer_id = u.id
        WHERE u.slug = $1 AND (u.role = 'streamer' OR u.role = 'admin') AND u.is_active = true`,
