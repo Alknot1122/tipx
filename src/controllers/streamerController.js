@@ -16,6 +16,7 @@ const getDashboard = async (req, res) => {
       `SELECT u.id, u.role, u.username, u.slug, u.email, u.is_active,
               u.stripe_account_id, u.stripe_onboarding_done,
               u.avatar_url, u.bg_color, u.bg_image_url,
+              u.avatar_focal_x, u.avatar_focal_y, u.bg_position_x, u.bg_position_y,
               ws.alert_token, ws.alert_config, ws.progress_config,
               ws.goal_amount, ws.goal_current, ws.goal_start_date
        FROM users u
@@ -48,6 +49,7 @@ const getDashboard = async (req, res) => {
         `SELECT u.id, u.role, u.username, u.slug, u.email, u.is_active,
                 u.stripe_account_id, u.stripe_onboarding_done,
                 u.avatar_url, u.bg_color, u.bg_image_url,
+                u.avatar_focal_x, u.avatar_focal_y, u.bg_position_x, u.bg_position_y,
                 ws.alert_token, ws.alert_config, ws.progress_config,
                 ws.goal_amount, ws.goal_current, ws.goal_start_date
          FROM users u
@@ -375,7 +377,8 @@ const deleteR2FileByUrl = async (url) => {
 // Update profile, handle, background appearance, and optionally the slug
 const updateProfile = async (req, res) => {
   const { slug } = req.params;
-  const { slug: newSlug, avatar_url, bg_color, bg_image_url } = req.body;
+  const { slug: newSlug, avatar_url, bg_color, bg_image_url,
+          avatar_focal_x, avatar_focal_y, bg_position_x, bg_position_y } = req.body;
 
   if (bg_color && !/^#[0-9A-Fa-f]{6}$/.test(bg_color)) {
     return res.status(400).json({ error: 'Invalid background color format. Must be a 6-digit hex color starting with #.' });
@@ -403,10 +406,16 @@ const updateProfile = async (req, res) => {
 
     const { rows } = await query(
       `UPDATE users
-       SET slug = $1, avatar_url = $2, bg_color = $3, bg_image_url = $4, updated_at = NOW()
-       WHERE slug = $5 AND (role = 'streamer' OR role = 'admin') AND is_active = true
-       RETURNING id, username, slug, avatar_url, bg_color, bg_image_url`,
-      [resolvedSlug, avatar_url || null, bg_color || '#0B0E14', bg_image_url || null, slug]
+       SET slug = $1, avatar_url = $2, bg_color = $3, bg_image_url = $4,
+           avatar_focal_x = $5, avatar_focal_y = $6,
+           bg_position_x = $7, bg_position_y = $8, updated_at = NOW()
+       WHERE slug = $9 AND (role = 'streamer' OR role = 'admin') AND is_active = true
+       RETURNING id, username, slug, avatar_url, bg_color, bg_image_url,
+                 avatar_focal_x, avatar_focal_y, bg_position_x, bg_position_y`,
+      [resolvedSlug, avatar_url || null, bg_color || '#0B0E14', bg_image_url || null,
+       parseInt(avatar_focal_x) || 50, parseInt(avatar_focal_y) || 50,
+       parseInt(bg_position_x) || 50, parseInt(bg_position_y) || 50,
+       slug]
     );
 
     if (!rows.length) return res.status(404).json({ error: 'Streamer not found.' });
