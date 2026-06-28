@@ -846,6 +846,19 @@
         if (isDark) document.body.classList.add('theme-dark');
       }
 
+      // Background + avatar — set first, then preload images before revealing
+      const bgPromise = s.bg_image_url ? new Promise(resolve => {
+        const img = new Image();
+        img.onload = img.onerror = resolve;
+        img.src = s.bg_image_url;
+      }) : Promise.resolve();
+
+      const avPromise = s.avatar_url ? new Promise(resolve => {
+        const img = new Image();
+        img.onload = img.onerror = resolve;
+        img.src = s.avatar_url;
+      }) : Promise.resolve();
+
       // Goal
       if (s.goal_amount > 0) {
         const gs = document.getElementById('goal-section');
@@ -857,6 +870,10 @@
         const pct = Math.min((s.goal_current / s.goal_amount) * 100, 100);
         setTimeout(() => { document.getElementById('goal-fill').style.width = pct + '%'; }, 200);
       }
+
+      // Wait for images to load (or fail) before revealing the page
+      await Promise.all([bgPromise, avPromise]);
+      await new Promise(r => setTimeout(r, 80)); // browser paint buffer
 
       document.getElementById('loading-screen').classList.add('done');
       document.body.classList.remove('loading');
