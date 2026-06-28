@@ -1068,7 +1068,7 @@
       const { error } = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: location.origin + location.pathname + '?paid=1',
+          return_url: location.origin + location.pathname,
           payment_method_data: { billing_details: { email } }
         }
       });
@@ -1112,14 +1112,8 @@
         }
       } catch (err) {
         console.error("Error retrieving payment intent:", err);
-        // Fallback checks
-        if (redirectStatus === 'succeeded') {
-          window.history.replaceState({ step: 'success' }, document.title, location.pathname);
-          showStep('success');
-        } else {
-          window.history.replaceState({ step: 'form' }, document.title, location.pathname);
-          toast('การชำระเงินไม่สำเร็จ');
-        }
+        window.history.replaceState({ step: 'form' }, document.title, location.pathname);
+        toast('การชำระเงินไม่สำเร็จ');
       }
     }
   })();

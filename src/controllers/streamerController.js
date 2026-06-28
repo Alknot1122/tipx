@@ -144,6 +144,26 @@ const replayDonation = async (req, res) => {
   }
 };
 
+// ── DELETE /dashboard/:slug/donations/:id ─────────────────────────────────────
+const deleteDonation = async (req, res) => {
+  const { slug, id } = req.params;
+
+  try {
+    const { rowCount } = await query(
+      `DELETE FROM donations d
+       USING users u
+       WHERE d.id = $1 AND u.slug = $2 AND d.streamer_id = u.id`,
+      [id, slug]
+    );
+
+    if (!rowCount) return res.status(404).json({ error: 'Donation not found.' });
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error('[Streamer] deleteDonation error:', err.message);
+    return res.status(500).json({ error: 'Internal server error.' });
+  }
+};
+
 // ── PUT /dashboard/:slug/widget ───────────────────────────────────────────────
 // Update widget configuration (alert + progress bar settings)
 
@@ -357,6 +377,7 @@ module.exports = {
   getDashboard,
   getDonations,
   replayDonation,
+  deleteDonation,
   updateWidgetSettings,
   getStripeOnboardingLink,
   updateProfile,

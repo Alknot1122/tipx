@@ -722,6 +722,9 @@
                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                Replay
              </button>`;
+        const del = `<button class="btn btn-danger-ghost btn-sm" onclick="deleteDonation(${d.id})" title="Delete" style="padding:4px 8px; margin-left:4px">
+               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+             </button>`;
         const escapedName = escapeHTML(d.donor_name);
         const msg = (d.message && d.message.trim()) ? `<div class="feed-msg">${escapeHTML(d.message.trim())}</div>` : '';
         let feeInfo = '';
@@ -744,7 +747,7 @@
               <span class="feed-amount">${formatAmount(d.amount)}</span>
               ${feeInfo}
               ${replay}
-            </div>
+              ${del}
           </div>`;
       });
       feed.innerHTML = html;
@@ -857,6 +860,15 @@
     try {
       await apiFetch(`/dashboard/${streamerSlug}/donations/${id}/replay`, { method: 'POST' });
       showToast('Replay triggered.', 'success');
+    } catch (err) { showToast(err.message, 'error'); }
+  }
+
+  async function deleteDonation(id) {
+    if (!confirm('Delete this donation record? This cannot be undone.')) return;
+    try {
+      await apiFetch(`/dashboard/${streamerSlug}/donations/${id}`, { method: 'DELETE' });
+      showToast('Donation deleted.', 'success');
+      await loadDonationsLog();
     } catch (err) { showToast(err.message, 'error'); }
   }
 
