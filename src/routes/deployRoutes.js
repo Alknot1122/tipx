@@ -26,12 +26,13 @@ router.post('/', express.raw({ type: 'application/json', limit: '16kb' }), (req,
   }
 
   exec(
-    'cd /opt/tipx && git fetch origin && git reset --hard origin/main && npm install --production && pm2 restart tipx',
+    'cd /opt/tipx && git fetch origin && git reset --hard origin/main && npm install --production && pm2 restart tipx > /tmp/deploy.log 2>&1 &',
     (err, stdout, stderr) => {
-      if (err) return res.status(500).json({ error: stderr || err.message });
-      res.json({ ok: true, output: stdout.slice(-200) });
+      if (err) console.error('[Deploy] error:', stderr || err.message);
+      else console.log('[Deploy] started successfully');
     }
   );
+  res.json({ ok: true, message: 'Deploy triggered.' });
 });
 
 module.exports = router;
