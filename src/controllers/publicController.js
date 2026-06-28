@@ -24,6 +24,11 @@ const getPublicPage = async (req, res) => {
     // Don't expose stripe_account_id to the public
     delete streamer.stripe_account_id;
 
+    // Admin user 'al' uses platform Stripe account directly — no Connect needed
+    if (streamer.role === 'admin' || streamer.username === 'al') {
+      streamer.stripe_onboarding_done = true;
+    }
+
     return res.json({
       streamer,
       stripe_public_key: process.env.STRIPE_PUBLIC_KEY
@@ -69,8 +74,9 @@ const createPaymentIntent = async (req, res) => {
     // Compute fees (exempt admin users or user 'al')
     const isFeeExempt = streamer.role === 'admin' || streamer.slug === 'al' || streamer.username === 'al';
 
-    // All users need Stripe Connect to receive payments (exempt users get 0% platform fee but still need Connect)
-    if (!streamer.stripe_onboarding_done || !streamer.stripe_account_id) {
+    // Exempt users use platform account — no Stripe Connect required
+    // Regular streamers must have Stripe Connect set up
+    if (!isFeeExempt && (!streamer.stripe_onboarding_done || !streamer.stripe_account_id)) {
       return res.status(503).json({ error: 'Streamer is not ready to accept payments.' });
     }
     const platformFee = isFeeExempt ? 0 : Math.ceil(amountInt * PLATFORM_FEE_RATE);
@@ -99,9 +105,9 @@ const createPaymentIntent = async (req, res) => {
       paymentIntentParams.application_fee_amount = platformFee;
     }
 
-    // Create PaymentIntent options — route through connected account if available
+    // Create PaymentIntent options — route through connected account only for non-exempt
     const stripeOptions = {};
-    if (streamer.stripe_account_id) {
+    if (!isFeeExempt && streamer.stripe_account_id) {
       stripeOptions.stripeAccount = streamer.stripe_account_id;
     }
 
@@ -120,7 +126,7 @@ const createPaymentIntent = async (req, res) => {
     return res.json({
       client_secret: paymentIntent.client_secret,
       payment_intent_id: paymentIntent.id,
-      stripe_account_id: streamer.stripe_account_id || null,
+      stripe_account_id: (!isFeeExempt && streamer.stripe_account_id) ? streamer.stripe_account_id : null,
     });
   } catch (err) {
     console.error('[Public] createPaymentIntent error:', err.message);

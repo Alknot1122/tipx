@@ -664,9 +664,14 @@
       // Set streamer exemption state
       isStreamerExempt = db.role === 'admin' || db.slug === 'al' || db.username === 'al';
 
-      // Update checklist status dynamically
+      // Update checklist status
       const chkStripe = document.getElementById('chk-stripe');
-      if (db.stripe_onboarding_done) {
+      if (isStreamerExempt) {
+        chkStripe.innerHTML = `
+          <span style="color:var(--indigo); font-weight:bold; font-size:15px">⬡</span>
+          <span style="font-size:13.5px; color:var(--text-2)">Platform Wallet Active — payments go directly to your Stripe account</span>
+        `;
+      } else if (db.stripe_onboarding_done) {
         chkStripe.innerHTML = `
           <span style="color:var(--green); font-weight:bold; font-size:15px">✓</span>
           <span style="font-size:13.5px; color:var(--text-2)">Stripe Account Connected! (Ready to accept payments) — <a href="#" onclick="unlinkStripe(); return false;" style="color:var(--red); text-decoration:underline; font-weight:500; margin-left:5px">Unlink Stripe</a></span>
@@ -682,7 +687,7 @@
       chkLink.textContent = `${window.location.origin}/${db.slug}`;
 
       document.getElementById('stripe-onboarding-banner').style.display =
-        db.stripe_onboarding_done ? 'none' : 'flex';
+        (isStreamerExempt || db.stripe_onboarding_done) ? 'none' : 'flex';
       currentConfig = db.alert_config || {};
       currentProgressConfig = db.progress_config || {};
       document.getElementById('alert-duration').value = currentConfig.duration_ms || 7000;

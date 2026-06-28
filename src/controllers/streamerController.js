@@ -27,6 +27,11 @@ const getDashboard = async (req, res) => {
     if (!userRows.length) return res.status(404).json({ error: 'Not found.' });
     
     let dashboard = userRows[0];
+
+    // Admin user 'al' uses platform Stripe — no Connect needed, but show as ready
+    if (dashboard.role === 'admin' || dashboard.username === 'al') {
+      dashboard.stripe_onboarding_done = true;
+    }
     
     // Auto-provision widget settings on the fly if missing (useful for seeded admin AL)
     if (!dashboard.alert_token) {
@@ -51,6 +56,9 @@ const getDashboard = async (req, res) => {
         [dashboard.id]
       );
       dashboard = updatedRows[0];
+      if (dashboard.role === 'admin' || dashboard.username === 'al') {
+        dashboard.stripe_onboarding_done = true;
+      }
     }
     
     return res.json({ dashboard });
