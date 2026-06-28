@@ -644,6 +644,10 @@
                     <input type="range" id="bg-position-y" min="0" max="100" value="50" style="flex:1">
                   </div>
                 </div>
+                <div class="form-field">
+                  <label class="label">Background Zoom <span style="font-weight:400; font-size:11px; color:var(--text-3)">(<span id="bg-scale-val">100</span>%)</span></label>
+                  <input type="range" id="bg-scale" min="60" max="200" value="100" style="width:100%; margin-top:4px">
+                </div>
               </div>
             </div>
           </div>
@@ -776,6 +780,7 @@
       document.getElementById('bg-preview').src = db.bg_image_url || '/favicon.ico';
       document.getElementById('bg-position-x').value = db.bg_position_x ?? 50;
       document.getElementById('bg-position-y').value = db.bg_position_y ?? 50;
+      document.getElementById('bg-scale').value = db.bg_scale ?? 100;
       updateProfilePreview();
       switchPreviewTab(currentPreviewType);
     } catch (err) { showToast(err.message, 'error'); }
@@ -931,7 +936,8 @@
           bg_color: document.getElementById('profile-bg-color').value,
           bg_image_url: document.getElementById('profile-bg-image').value,
           bg_position_x: document.getElementById('bg-position-x').value,
-          bg_position_y: document.getElementById('bg-position-y').value
+          bg_position_y: document.getElementById('bg-position-y').value,
+          bg_scale: document.getElementById('bg-scale').value
         })
       });
       showToast('Profile updated.', 'success');
@@ -958,9 +964,11 @@
     const color = document.getElementById('profile-bg-color').value || '';
     const bgX = document.getElementById('bg-position-x').value;
     const bgY = document.getElementById('bg-position-y').value;
+    const bgScale = document.getElementById('bg-scale').value;
 
     document.getElementById('bg-x-val').textContent = bgX;
     document.getElementById('bg-y-val').textContent = bgY;
+    document.getElementById('bg-scale-val').textContent = bgScale;
 
     const av = document.getElementById('pv-avatar');
     if (avatar) {
@@ -974,7 +982,7 @@
 
     const phone = document.getElementById('preview-phone');
     if (bg && bg.startsWith('http')) {
-      phone.style.background = `linear-gradient(rgba(0,0,0,0.05),rgba(0,0,0,0.4)), url(${bg}) ${bgX}% ${bgY}%/cover no-repeat`;
+      phone.style.background = `linear-gradient(rgba(0,0,0,0.05),rgba(0,0,0,0.4)), url(${bg}) ${bgX}% ${bgY}%/${bgScale}% no-repeat`;
       document.getElementById('pv-name').style.color = '#fff';
       document.getElementById('pv-handle').style.color = 'rgba(255,255,255,0.7)';
     } else if (color) {
@@ -1090,6 +1098,7 @@
 
   document.getElementById('bg-position-x').addEventListener('input', updateProfilePreview);
   document.getElementById('bg-position-y').addEventListener('input', updateProfilePreview);
+  document.getElementById('bg-scale').addEventListener('input', updateProfilePreview);
 
   // Client-side image compression using Canvas API
   function compressImage(file, maxWidth, maxHeight, quality = 0.85) {

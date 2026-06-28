@@ -42,6 +42,7 @@ CREATE TABLE users (
     avatar_focal_y          INT          DEFAULT 50,                -- avatar focal Y% (0-100)
     bg_position_x           INT          DEFAULT 50,                -- background position X% (0-100)
     bg_position_y           INT          DEFAULT 50,                -- background position Y% (0-100)
+    bg_scale                INT          DEFAULT 100,               -- background zoom % (100 = actual)
     is_active               BOOLEAN      NOT NULL DEFAULT TRUE,    -- soft-disable accounts
     created_at              TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at              TIMESTAMPTZ  NOT NULL DEFAULT NOW()

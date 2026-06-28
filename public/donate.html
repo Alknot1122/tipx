@@ -916,9 +916,10 @@
         const bgY = s.bg_position_y ?? 50;
         const isMobile = window.innerWidth < 768;
         // Radial vignette: lighter center, darker edges — draws focus to content
+        const bgScale = s.bg_scale ?? 100;
         Object.assign(document.body.style, {
-          background: `linear-gradient(to bottom, rgba(0,0,0,0.05), rgba(0,0,0,0.4)), url(${s.bg_image_url}) ${bgX}% ${bgY}%/cover no-repeat ${isMobile ? 'scroll' : 'fixed'}`,
-          backgroundSize: 'cover',
+          background: `linear-gradient(to bottom, rgba(0,0,0,0.05), rgba(0,0,0,0.4)), url(${s.bg_image_url}) ${bgX}% ${bgY}%/${bgScale}% no-repeat ${isMobile ? 'scroll' : 'fixed'}`,
+          backgroundSize: isMobile ? `${bgScale}%` : 'cover',
         });
         document.body.classList.add('theme-glass');
         // Parallax on scroll
