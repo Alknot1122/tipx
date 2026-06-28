@@ -24,8 +24,6 @@ const cors     = require('cors');
 const helmet   = require('helmet');
 const morgan   = require('morgan');
 const cookieParser = require('cookie-parser');
-const { exec } = require('child_process');
-const crypto      = require('crypto');
 
 const { initWidgetSocket } = require('./websockets/widgetSocket');
 const { initDBMaintenance } = require('./utils/dbMaintenance');
@@ -38,6 +36,7 @@ const publicRoutes  = require('./routes/publicRoutes');
 const webhookRoutes = require('./routes/webhookRoutes');
 const widgetRoutes  = require('./routes/widgetRoutes');
 const uploadRoutes  = require('./routes/uploadRoutes');
+const deployRoutes  = require('./routes/deployRoutes');
 
 // ── App Init ──────────────────────────────────────────────────────────────────
 
@@ -63,6 +62,7 @@ initDBMaintenance();
 // (express.raw() is applied inside webhookRoutes.js only for that specific endpoint)
 app.use('/webhooks/stripe', webhookRoutes);
 app.use('/api/webhooks/stripe', webhookRoutes);
+app.use('/api/deploy', deployRoutes);  // raw body — must be before express.json()
 
 // Security with strict Content Security Policy (CSP)
 app.use(helmet({
@@ -133,24 +133,6 @@ app.use('/api/public',     publicRoutes);
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', ts: Date.now() }));
 app.get('/health', (_req, res) => res.json({ status: 'ok', ts: Date.now() }));
-
-// ── Auto Deploy (GitHub webhook) ─────────────────────────────────────────────
-const DEPLOY_SECRET = process.env.DEPLOY_SECRET || '';
-app.post('/api/deploy', express.raw({ type: 'application/json', limit: '16kb' }), (req, res) => {
-  // Verify GitHub HMAC-SHA256 signature
-  const sig = req.headers['x-hub-signature-256'] || '';
-  const expected = 'sha256=' + crypto.createHmac('sha256', DEPLOY_SECRET).update(req.body).digest('hex');
-  if (!DEPLOY_SECRET || !crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) {
-    return res.status(403).json({ error: 'Forbidden.' });
-  }
-
-  exec('cd /opt/tipx && git fetch origin && git reset --hard origin/main && npm install --production && pm2 restart tipx',
-    (err, stdout, stderr) => {
-      if (err) return res.status(500).json({ error: stderr || err.message });
-      res.json({ ok: true, output: stdout.slice(-200) });
-    }
-  );
-});
 
 // Middleware to disable caching for HTML pages to ensure new scripts/styles load immediately
 const noCache = (req, res, next) => {
