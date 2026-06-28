@@ -160,6 +160,14 @@ app.get('/login', noCache, (req, res) => {
   res.sendFile(path.join(__dirname, '../public/login.html'));
 });
 
+app.get('/privacy', noCache, (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/privacy.html'));
+});
+
+app.get('/terms', noCache, (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/terms.html'));
+});
+
 app.get('/dashboard', noCache, (req, res) => {
   const jwt = require('jsonwebtoken');
   const token = req.cookies?.access_token;
