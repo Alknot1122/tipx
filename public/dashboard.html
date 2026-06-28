@@ -626,15 +626,21 @@
   }
 
   window.addEventListener('DOMContentLoaded', async () => {
-    const user = await requireAuth();
-    if (user.role !== 'admin' && user.slug !== streamerSlug) {
-      showToast('Access denied.', 'error');
-      window.location.href = `/dashboard/${user.slug}`;
-      return;
+    try {
+      const user = await requireAuth();
+      if (!user) return;
+      if (user.role !== 'admin' && user.slug !== streamerSlug) {
+        showToast('Access denied.', 'error');
+        window.location.href = `/dashboard/${user.slug}`;
+        return;
+      }
+      document.body.style.display = 'block';
+      await loadDashboardData();
+      await loadDonationsLog();
+    } catch (_) {
+      document.body.style.display = 'block';
+      showToast('Error loading dashboard. Check console.', 'error');
     }
-    document.body.style.display = 'block';
-    await loadDashboardData();
-    await loadDonationsLog();
   });
 
   async function loadDashboardData() {

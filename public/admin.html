@@ -295,6 +295,7 @@
 
   window.addEventListener('DOMContentLoaded', async () => {
     const user = await requireAdmin();
+    if (!user) return;
     document.body.style.display = 'block';
     document.getElementById('admin-username').textContent = user.username;
     await fetchStreamers();

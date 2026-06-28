@@ -105,9 +105,8 @@ async function requireAuth() {
     showToast('Session expired. Please log in.', 'error');
     setTimeout(() => {
       window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
-    }, 1000);
-    // Return a never-resolving promise to block page actions while redirecting
-    return new Promise(() => {});
+    }, 800);
+    return null;
   }
   return user;
 }
@@ -119,17 +118,17 @@ async function requireAuth() {
  */
 async function requireAdmin() {
   const user = await requireAuth();
+  if (!user) return null;
   if (user.role !== 'admin') {
     showToast('Unauthorized: Admin access required.', 'error');
     setTimeout(() => {
-      // Streamers get redirected to their dashboard, others to login
       if (user.role === 'streamer' && user.slug) {
         window.location.href = `/dashboard/${user.slug}`;
       } else {
         window.location.href = '/login';
       }
     }, 1200);
-    return new Promise(() => {});
+    return null;
   }
   return user;
 }
