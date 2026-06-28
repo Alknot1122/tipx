@@ -24,6 +24,7 @@ const cors     = require('cors');
 const helmet   = require('helmet');
 const morgan   = require('morgan');
 const cookieParser = require('cookie-parser');
+const { exec } = require('child_process');
 
 const { initWidgetSocket } = require('./websockets/widgetSocket');
 const { initDBMaintenance } = require('./utils/dbMaintenance');
@@ -131,6 +132,21 @@ app.use('/api/public',     publicRoutes);
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', ts: Date.now() }));
 app.get('/health', (_req, res) => res.json({ status: 'ok', ts: Date.now() }));
+
+// ── Auto Deploy (GitHub webhook) ─────────────────────────────────────────────
+const DEPLOY_SECRET = process.env.DEPLOY_SECRET || 'tipx-deploy-secret-change-me';
+app.post('/api/deploy', (req, res) => {
+  const secret = req.headers['x-deploy-secret'];
+  if (secret !== DEPLOY_SECRET) {
+    return res.status(403).json({ error: 'Forbidden.' });
+  }
+  exec('cd /opt/tipx && git fetch origin && git reset --hard origin/main && npm install --production && pm2 restart tipx',
+    (err, stdout, stderr) => {
+      if (err) return res.status(500).json({ error: stderr || err.message });
+      res.json({ ok: true, output: stdout.slice(-200) });
+    }
+  );
+});
 
 // Middleware to disable caching for HTML pages to ensure new scripts/styles load immediately
 const noCache = (req, res, next) => {
