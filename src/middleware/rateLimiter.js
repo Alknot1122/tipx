@@ -25,8 +25,9 @@ const rateLimiter = (windowMs = 15 * 60 * 1000, maxRequests = 100, message = 'To
   }, 10 * 60 * 1000).unref(); // runs every 10 mins without holding node process
 
   return (req, res, next) => {
-    // Retrieve correct client IP even behind proxies (like Cloudflare/Nginx)
-    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip;
+    // Retrieve correct client IP even behind proxies (Cloudflare/Nginx)
+    const rawFwd = req.headers['x-forwarded-for'];
+    const ip = rawFwd ? rawFwd.split(',')[0].trim() : (req.socket.remoteAddress || req.ip);
     const now = Date.now();
 
     if (!rateLimitStore[ip]) {

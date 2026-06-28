@@ -25,21 +25,23 @@ const handleStripeWebhook = async (req, res) => {
 
   // ── Handle payment_intent.succeeded ────────────────────────────────────────
   if (event.type === 'payment_intent.succeeded') {
-    await handlePaymentSucceeded(event.data.object);
+    try { await handlePaymentSucceeded(event.data.object); }
+    catch (err) { console.error('[Webhook] handlePaymentSucceeded failed:', err.message); return res.status(500).json({ error: 'Processing failed.' }); }
   }
 
   // ── Handle payment_intent.canceled ─────────────────────────────────────────
-  // Clean up any orphaned pending donation row when Stripe cancels the PI
   if (event.type === 'payment_intent.canceled') {
-    await handlePaymentCanceled(event.data.object);
+    try { await handlePaymentCanceled(event.data.object); }
+    catch (err) { console.error('[Webhook] handlePaymentCanceled failed:', err.message); return res.status(500).json({ error: 'Processing failed.' }); }
   }
 
   // ── Handle account.updated (Stripe Connect onboarding complete) ────────────
   if (event.type === 'account.updated') {
-    await handleAccountUpdated(event.data.object);
+    try { await handleAccountUpdated(event.data.object); }
+    catch (err) { console.error('[Webhook] handleAccountUpdated failed:', err.message); return res.status(500).json({ error: 'Processing failed.' }); }
   }
 
-  // Acknowledge receipt immediately (Stripe retries on non-2xx)
+  // Acknowledge only if all handlers succeeded
   return res.json({ received: true });
 };
 
@@ -175,6 +177,7 @@ const handlePaymentSucceeded = async (paymentIntent) => {
     });
   } catch (err) {
     console.error('[Webhook] handlePaymentSucceeded error:', err.message);
+    throw err;
   }
 };
 
@@ -184,15 +187,11 @@ const handleAccountUpdated = async (account) => {
   const { id: stripeAccountId, charges_enabled, details_submitted } = account;
   if (!charges_enabled || !details_submitted) return;
 
-  try {
-    await query(
-      `UPDATE users SET stripe_onboarding_done = true WHERE stripe_account_id = $1`,
-      [stripeAccountId]
-    );
-    console.log(`[Webhook] ✅ Stripe account ${stripeAccountId} onboarding complete.`);
-  } catch (err) {
-    console.error('[Webhook] handleAccountUpdated error:', err.message);
-  }
+  await query(
+    `UPDATE users SET stripe_onboarding_done = true WHERE stripe_account_id = $1`,
+    [stripeAccountId]
+  );
+  console.log(`[Webhook] ✅ Stripe account ${stripeAccountId} onboarding complete.`);
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -200,18 +199,14 @@ const handleAccountUpdated = async (account) => {
 const handlePaymentCanceled = async (paymentIntent) => {
   const { id: piId } = paymentIntent;
 
-  try {
-    const { rows: existing } = await query(
-      `SELECT id, status FROM donations WHERE stripe_payment_intent = $1`,
-      [piId]
-    );
+  const { rows: existing } = await query(
+    `SELECT id, status FROM donations WHERE stripe_payment_intent = $1`,
+    [piId]
+  );
 
-    if (existing.length && existing[0].status === 'pending') {
-      await query(`DELETE FROM donations WHERE id = $1`, [existing[0].id]);
-      console.log(`[Webhook] Cleaned up canceled PI ${piId} — pending row deleted.`);
-    }
-  } catch (err) {
-    console.error('[Webhook] handlePaymentCanceled error:', err.message);
+  if (existing.length && existing[0].status === 'pending') {
+    await query(`DELETE FROM donations WHERE id = $1`, [existing[0].id]);
+    console.log(`[Webhook] Cleaned up canceled PI ${piId} — pending row deleted.`);
   }
 };
 

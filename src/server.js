@@ -131,7 +131,15 @@ app.use('/api/public',     publicRoutes);
 
 // ── Health Check ──────────────────────────────────────────────────────────────
 
-app.get('/api/health', (_req, res) => res.json({ status: 'ok', ts: Date.now() }));
+app.get('/api/health', async (_req, res) => {
+  try {
+    const { query } = require('./config/db');
+    await query('SELECT 1');
+    res.json({ status: 'ok', ts: Date.now() });
+  } catch (_) {
+    res.status(503).json({ status: 'error', message: 'Database unreachable.' });
+  }
+});
 app.get('/health', (_req, res) => res.json({ status: 'ok', ts: Date.now() }));
 
 // Middleware to disable caching for HTML pages to ensure new scripts/styles load immediately
@@ -193,7 +201,8 @@ app.use((err, _req, res, _next) => {
 
 // Global safety net — catch unhandled promise rejections
 process.on('unhandledRejection', (reason) => {
-  console.error('[FATAL] Unhandled Rejection:', reason);
+  console.error('[FATAL] Unhandled Rejection — exiting so PM2 restarts:', reason);
+  process.exit(1);
 });
 
 // Graceful shutdown on SIGTERM/SIGINT (Docker, Render, Ctrl+C)

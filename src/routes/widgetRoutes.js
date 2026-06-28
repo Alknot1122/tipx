@@ -69,6 +69,9 @@ const generateAlertBoxHTML = (token, config) => {
     ...config,
   };
 
+  // Sanitize font_family: only allow letters, digits, spaces, hyphens, commas
+  cfg.font_family = (cfg.font_family || 'Inter').replace(/[^a-zA-Z0-9 ,_-]/g, '').slice(0, 100) || 'Inter';
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
