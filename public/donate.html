@@ -913,10 +913,27 @@
       if (s.bg_image_url) {
         const bgX = s.bg_position_x ?? 50;
         const bgY = s.bg_position_y ?? 50;
+        const isMobile = window.innerWidth < 768;
+        // Lighter overlay so the image shines through, scroll for mobile parallax feel
         Object.assign(document.body.style, {
-          background: `linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.65)), url(${s.bg_image_url}) ${bgX}% ${bgY}%/cover no-repeat fixed`,
+          background: `linear-gradient(to bottom, rgba(0,0,0,0.05), rgba(0,0,0,0.4)), url(${s.bg_image_url}) ${bgX}% ${bgY}%/cover no-repeat ${isMobile ? 'scroll' : 'fixed'}`,
         });
         document.body.classList.add('theme-glass');
+        // Subtle parallax on mobile scroll
+        if (isMobile) {
+          let ticking = false;
+          window.addEventListener('scroll', () => {
+            if (!ticking) {
+              requestAnimationFrame(() => {
+                const scrollY = window.scrollY;
+                const speed = 0.15;
+                document.body.style.backgroundPositionY = `calc(${bgY}% + ${scrollY * speed}px)`;
+                ticking = false;
+              });
+              ticking = true;
+            }
+          }, { passive: true });
+        }
       } else if (s.bg_color) {
         document.body.style.background = s.bg_color;
         const isDark = hexBrightness(s.bg_color) < 140;
