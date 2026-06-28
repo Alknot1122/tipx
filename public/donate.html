@@ -328,10 +328,10 @@
     body.theme-glass input, 
     body.theme-glass textarea, 
     body.theme-glass .preset-btn {
-      background: rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.07);
+      backdrop-filter: blur(32px);
+      -webkit-backdrop-filter: blur(32px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       color: #fff;
     }
     body.theme-glass input::placeholder, 
@@ -340,9 +340,9 @@
     }
     body.theme-glass input:focus, 
     body.theme-glass textarea:focus {
-      background: rgba(255, 255, 255, 0.12);
-      border-color: rgba(255, 255, 255, 0.4);
-      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.3);
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
     }
     body.theme-glass .preset-btn:hover {
       background: rgba(255, 255, 255, 0.15);
@@ -360,6 +360,7 @@
     body.theme-glass .field-label { color: rgba(255,255,255,0.8); }
     body.theme-glass .creator-name { color: #fff; }
     body.theme-glass .creator-handle { color: rgba(255,255,255,0.7); }
+    body.theme-glass .avatar { box-shadow: 0 0 0 2px rgba(255,255,255,0.08), 0 8px 32px rgba(0,0,0,0.3), 0 0 48px rgba(91,95,199,0.06); }
     body.theme-glass .brand-footer { color: rgba(255,255,255,0.5); }
     body.theme-glass .brand-footer span { color: rgba(255,255,255,0.8); }
     body.theme-glass .goal-header span { color: rgba(255,255,255,0.8); }
@@ -909,25 +910,24 @@
         av.textContent = s.username.charAt(0).toUpperCase();
       }
 
-      // Background
+      // Background with vignette + subtle animation
       if (s.bg_image_url) {
         const bgX = s.bg_position_x ?? 50;
         const bgY = s.bg_position_y ?? 50;
         const isMobile = window.innerWidth < 768;
-        // Lighter overlay so the image shines through, scroll for mobile parallax feel
+        // Radial vignette: lighter center, darker edges — draws focus to content
         Object.assign(document.body.style, {
-          background: `linear-gradient(to bottom, rgba(0,0,0,0.05), rgba(0,0,0,0.4)), url(${s.bg_image_url}) ${bgX}% ${bgY}%/cover no-repeat ${isMobile ? 'scroll' : 'fixed'}`,
+          background: `radial-gradient(ellipse 60% 50% at 50% 40%, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.25) 70%, rgba(0,0,0,0.5) 100%), url(${s.bg_image_url}) ${bgX}% ${bgY}%/cover no-repeat ${isMobile ? 'scroll' : 'fixed'}`,
+          backgroundSize: 'cover',
         });
         document.body.classList.add('theme-glass');
-        // Subtle parallax on mobile scroll
+        // Parallax on scroll
         if (isMobile) {
           let ticking = false;
           window.addEventListener('scroll', () => {
             if (!ticking) {
               requestAnimationFrame(() => {
-                const scrollY = window.scrollY;
-                const speed = 0.15;
-                document.body.style.backgroundPositionY = `calc(${bgY}% + ${scrollY * speed}px)`;
+                document.body.style.backgroundPositionY = `calc(${bgY}% + ${window.scrollY * 0.12}px)`;
                 ticking = false;
               });
               ticking = true;
