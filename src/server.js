@@ -25,6 +25,7 @@ const helmet   = require('helmet');
 const morgan   = require('morgan');
 const cookieParser = require('cookie-parser');
 const { exec } = require('child_process');
+const crypto      = require('crypto');
 
 const { initWidgetSocket } = require('./websockets/widgetSocket');
 const { initDBMaintenance } = require('./utils/dbMaintenance');
@@ -134,12 +135,15 @@ app.get('/api/health', (_req, res) => res.json({ status: 'ok', ts: Date.now() })
 app.get('/health', (_req, res) => res.json({ status: 'ok', ts: Date.now() }));
 
 // ── Auto Deploy (GitHub webhook) ─────────────────────────────────────────────
-const DEPLOY_SECRET = process.env.DEPLOY_SECRET || 'tipx-deploy-secret-change-me';
-app.post('/api/deploy', (req, res) => {
-  const secret = req.headers['x-deploy-secret'];
-  if (secret !== DEPLOY_SECRET) {
+const DEPLOY_SECRET = process.env.DEPLOY_SECRET || '';
+app.post('/api/deploy', express.raw({ type: 'application/json', limit: '16kb' }), (req, res) => {
+  // Verify GitHub HMAC-SHA256 signature
+  const sig = req.headers['x-hub-signature-256'] || '';
+  const expected = 'sha256=' + crypto.createHmac('sha256', DEPLOY_SECRET).update(req.body).digest('hex');
+  if (!DEPLOY_SECRET || !crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) {
     return res.status(403).json({ error: 'Forbidden.' });
   }
+
   exec('cd /opt/tipx && git fetch origin && git reset --hard origin/main && npm install --production && pm2 restart tipx',
     (err, stdout, stderr) => {
       if (err) return res.status(500).json({ error: stderr || err.message });
