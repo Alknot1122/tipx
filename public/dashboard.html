@@ -568,17 +568,6 @@
                 </div>
               </div>
             </div>
-            <!-- Desktop -->
-            <div style="text-align:center; flex:1; min-width:220px">
-              <div style="font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-3); margin-bottom:6px">💻 Desktop</div>
-              <div id="preview-desktop" style="width:100%; height:200px; border-radius:10px; border:2px solid var(--border); overflow:hidden; position:relative; background:#fafafa">
-                <div id="preview-desktop-content" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; height:100%">
-                  <div id="pv-av-desk" style="width:56px;height:56px;border-radius:50%;background:#e8e8f0;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:var(--indigo);overflow:hidden;margin-bottom:8px;flex-shrink:0">A</div>
-                  <div id="pv-name-desk" style="font-size:14px;font-weight:700;color:#111;margin-bottom:1px">—</div>
-                  <div id="pv-handle-desk" style="font-size:10px;color:#999">@—</div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -632,14 +621,7 @@
                   </div>
                 </div>
                 <div class="form-field">
-                  <label class="label">Avatar Focal Point <span style="font-weight:400; font-size:11px; color:var(--text-3)">(X: <span id="af-x-val">50</span>% Y: <span id="af-y-val">50</span>%)</span></label>
-                  <div style="display:flex; gap:12px; margin-top:4px">
-                    <input type="range" id="avatar-focal-x" min="0" max="100" value="50" style="flex:1">
-                    <input type="range" id="avatar-focal-y" min="0" max="100" value="50" style="flex:1">
-                  </div>
-                </div>
-                <div class="form-field">
-                  <label class="label">BG Position <span style="font-weight:400; font-size:11px; color:var(--text-3)">(X: <span id="bg-x-val">50</span>% Y: <span id="bg-y-val">50</span>%)</span></label>
+                  <label class="label">Background Position <span style="font-weight:400; font-size:11px; color:var(--text-3)">(X: <span id="bg-x-val">50</span>% Y: <span id="bg-y-val">50</span>%)</span></label>
                   <div style="display:flex; gap:12px; margin-top:4px">
                     <input type="range" id="bg-position-x" min="0" max="100" value="50" style="flex:1">
                     <input type="range" id="bg-position-y" min="0" max="100" value="50" style="flex:1">
@@ -775,8 +757,6 @@
       document.getElementById('profile-bg-color-picker').value = db.bg_color || '#f7f8fa';
       document.getElementById('profile-bg-image').value = db.bg_image_url || '';
       document.getElementById('bg-preview').src = db.bg_image_url || '/favicon.ico';
-      document.getElementById('avatar-focal-x').value = db.avatar_focal_x ?? 50;
-      document.getElementById('avatar-focal-y').value = db.avatar_focal_y ?? 50;
       document.getElementById('bg-position-x').value = db.bg_position_x ?? 50;
       document.getElementById('bg-position-y').value = db.bg_position_y ?? 50;
       updateProfilePreview();
@@ -933,8 +913,6 @@
           avatar_url: document.getElementById('profile-avatar').value,
           bg_color: document.getElementById('profile-bg-color').value,
           bg_image_url: document.getElementById('profile-bg-image').value,
-          avatar_focal_x: document.getElementById('avatar-focal-x').value,
-          avatar_focal_y: document.getElementById('avatar-focal-y').value,
           bg_position_x: document.getElementById('bg-position-x').value,
           bg_position_y: document.getElementById('bg-position-y').value
         })
@@ -961,43 +939,37 @@
     const avatar = document.getElementById('profile-avatar').value || '';
     const bg = document.getElementById('profile-bg-image').value || '';
     const color = document.getElementById('profile-bg-color').value || '';
-    const afX = document.getElementById('avatar-focal-x').value;
-    const afY = document.getElementById('avatar-focal-y').value;
     const bgX = document.getElementById('bg-position-x').value;
     const bgY = document.getElementById('bg-position-y').value;
 
-    document.getElementById('af-x-val').textContent = afX;
-    document.getElementById('af-y-val').textContent = afY;
     document.getElementById('bg-x-val').textContent = bgX;
     document.getElementById('bg-y-val').textContent = bgY;
 
-    const updateEl = (avId, nameId, handleId, containerId) => {
-      const av = document.getElementById(avId);
-      if (avatar) {
-        av.innerHTML = `<img src="${avatar}" style="width:100%;height:100%;object-fit:cover;object-position:${afX}% ${afY}%" onerror="this.style.display='none';this.parentElement.textContent='${(name||'A')[0]}'">`;
-      } else {
-        av.innerHTML = '';
-        av.textContent = (name || 'A').charAt(0).toUpperCase();
-      }
-      document.getElementById(nameId).textContent = name;
-      document.getElementById(handleId).textContent = '@' + slug;
+    const av = document.getElementById('pv-avatar');
+    if (avatar) {
+      av.innerHTML = `<img src="${avatar}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.parentElement.textContent='${(name||'A')[0]}'">`;
+    } else {
+      av.innerHTML = '';
+      av.textContent = (name || 'A').charAt(0).toUpperCase();
+    }
+    document.getElementById('pv-name').textContent = name;
+    document.getElementById('pv-handle').textContent = '@' + slug;
 
-      const container = document.getElementById(containerId);
-      if (bg && bg.startsWith('http')) {
-        container.style.background = `linear-gradient(rgba(0,0,0,0.1),rgba(0,0,0,0.6)), url(${bg}) ${bgX}% ${bgY}%/cover no-repeat`;
-        container.querySelectorAll('[id^="pv-name"], [id^="pv-handle"]').forEach(el => el.style.color = '#fff');
-      } else if (color) {
-        container.style.background = color;
-        const isDark = (parseInt(color.replace('#','').substr(0,2),16)*299 + parseInt(color.replace('#','').substr(2,2),16)*587 + parseInt(color.replace('#','').substr(4,2),16)*114)/1000 < 140;
-        container.querySelectorAll('[id^="pv-name"], [id^="pv-handle"]').forEach(el => el.style.color = isDark ? '#fff' : '#111');
-      } else {
-        container.style.background = '#fafafa';
-        container.querySelectorAll('[id^="pv-name"], [id^="pv-handle"]').forEach(el => el.style.color = '#111');
-      }
-    };
-
-    updateEl('pv-avatar', 'pv-name', 'pv-handle', 'preview-phone');
-    updateEl('pv-av-desk', 'pv-name-desk', 'pv-handle-desk', 'preview-desktop');
+    const phone = document.getElementById('preview-phone');
+    if (bg && bg.startsWith('http')) {
+      phone.style.background = `linear-gradient(rgba(0,0,0,0.1),rgba(0,0,0,0.6)), url(${bg}) ${bgX}% ${bgY}%/cover no-repeat`;
+      document.getElementById('pv-name').style.color = '#fff';
+      document.getElementById('pv-handle').style.color = 'rgba(255,255,255,0.7)';
+    } else if (color) {
+      phone.style.background = color;
+      const isDark = (parseInt(color.replace('#','').substr(0,2),16)*299 + parseInt(color.replace('#','').substr(2,2),16)*587 + parseInt(color.replace('#','').substr(4,2),16)*114)/1000 < 140;
+      if (isDark) { document.getElementById('pv-name').style.color = '#fff'; document.getElementById('pv-handle').style.color = 'rgba(255,255,255,0.6)'; }
+      else { document.getElementById('pv-name').style.color = '#111'; document.getElementById('pv-handle').style.color = '#999'; }
+    } else {
+      phone.style.background = '#fafafa';
+      document.getElementById('pv-name').style.color = '#111';
+      document.getElementById('pv-handle').style.color = '#999';
+    }
   }
 
   async function deleteDonation(id) {
@@ -1099,8 +1071,6 @@
     updateProfilePreview();
   });
 
-  document.getElementById('avatar-focal-x').addEventListener('input', updateProfilePreview);
-  document.getElementById('avatar-focal-y').addEventListener('input', updateProfilePreview);
   document.getElementById('bg-position-x').addEventListener('input', updateProfilePreview);
   document.getElementById('bg-position-y').addEventListener('input', updateProfilePreview);
 
