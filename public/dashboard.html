@@ -559,12 +559,29 @@
           <div style="padding:16px 20px; display:flex; gap:20px; overflow-x:auto; align-items:flex-start">
             <!-- Phone -->
             <div style="text-align:center; flex-shrink:0">
-              <div style="font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-3); margin-bottom:6px">📱 Phone</div>
-              <div id="preview-phone" style="width:180px; height:320px; border-radius:16px; border:2px solid var(--border); overflow:hidden; position:relative; background:#fafafa">
-                <div id="preview-phone-content" style="display:flex; flex-direction:column; align-items:center; padding:24px 12px 12px; height:100%">
-                  <div id="pv-avatar" style="width:52px;height:52px;border-radius:50%;background:#e8e8f0;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--indigo);overflow:hidden;margin-bottom:8px;flex-shrink:0">A</div>
-                  <div id="pv-name" style="font-size:12px;font-weight:700;color:#111;margin-bottom:1px">—</div>
-                  <div id="pv-handle" style="font-size:9px;color:#999">@—</div>
+              <div style="font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-3); margin-bottom:8px">📱 iPhone 13</div>
+              <div style="position:relative; width:195px; height:422px; border-radius:40px; background:#1a1a1a; padding:12px; box-shadow:0 8px 32px rgba(0,0,0,0.15)">
+                <!-- Notch -->
+                <div style="position:absolute; top:12px; left:50%; transform:translateX(-50%); width:60px; height:20px; background:#1a1a1a; border-radius:0 0 14px 14px; z-index:2"></div>
+                <div id="preview-phone" style="width:100%; height:100%; border-radius:28px; overflow:hidden; background:#fafafa">
+                  <div style="display:flex; flex-direction:column; align-items:center; padding:28px 14px 14px; height:100%">
+                    <div id="pv-avatar" style="width:44px;height:44px;border-radius:50%;background:#e8e8f0;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--indigo);overflow:hidden;margin-bottom:8px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.06)">A</div>
+                    <div id="pv-name" style="font-size:11px;font-weight:700;color:#111;margin-bottom:1px">—</div>
+                    <div id="pv-handle" style="font-size:9px;color:#999;margin-bottom:10px">@—</div>
+                    <!-- Goal bar -->
+                    <div style="width:100%; margin-bottom:8px">
+                      <div style="display:flex;justify-content:space-between;font-size:7px;color:#999;margin-bottom:3px"><span>Goal</span><span id="pv-goal">฿0 / ฿0</span></div>
+                      <div style="height:3px;background:rgba(0,0,0,0.07);border-radius:99px;overflow:hidden"><div style="height:100%;width:0%;background:var(--indigo);border-radius:99px"></div></div>
+                    </div>
+                    <!-- Form mock -->
+                    <div style="width:100%;display:flex;gap:3px;margin-bottom:6px">
+                      <div style="flex:1;height:18px;border-radius:6px;background:rgba(0,0,0,0.04);border:1px solid rgba(0,0,0,0.06)"></div>
+                      <div style="flex:1;height:18px;border-radius:6px;background:rgba(0,0,0,0.04);border:1px solid rgba(0,0,0,0.06)"></div>
+                      <div style="flex:1;height:18px;border-radius:6px;background:rgba(0,0,0,0.04);border:1px solid rgba(0,0,0,0.06)"></div>
+                    </div>
+                    <div style="width:100%;height:14px;border-radius:6px;background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.05);margin-bottom:8px"></div>
+                    <div style="width:100%;height:24px;border-radius:7px;background:var(--text);display:flex;align-items:center;justify-content:center;font-size:7px;color:#fff;font-weight:600;opacity:0.7">Continue →</div>
+                  </div>
                 </div>
               </div>
             </div>
