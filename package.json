@@ -1,0 +1,40 @@
+{
+  "name": "tipx",
+  "version": "1.0.0",
+  "description": "TipX — Self-hosted streaming donation platform for tip.re-codex.com",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "migrate": "node src/scripts/migrate.js",
+    "seed:admin": "node src/scripts/seedAdmin.js"
+  },
+  "keywords": [
+    "tipx",
+    "donations",
+    "stripe",
+    "streaming"
+  ],
+  "author": "re-codex",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1075.0",
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "helmet": "^8.2.0",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.10.1",
+    "multer": "^2.2.0",
+    "pg": "^8.21.0",
+    "socket.io": "^4.8.3",
+    "stripe": "^22.2.0",
+    "uuid": "^14.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TipX — Sign in</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .login-box {
+      width: 100%;
+      max-width: 360px;
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--r-xl);
+      padding: 36px 32px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .wordmark {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.02em;
+      margin-bottom: 28px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .wordmark-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--indigo);
+    }
+
+    .login-title {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .login-sub {
+      font-size: 13.5px;
+      color: var(--text-2);
+      margin-bottom: 24px;
+    }
+
+    .powered {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-3);
+    }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <div class="wordmark">
+      <div class="wordmark-dot"></div>
+      TipX
+    </div>
+    <h1 class="login-title">Sign in</h1>
+    <p class="login-sub">Enter your credentials to continue.</p>
+
+    <form id="login-form">
+      <div class="form-field">
+        <label class="label" for="username">Username</label>
+        <input class="input" type="text" id="username" placeholder="yourusername" required autocomplete="username">
+      </div>
+      <div class="form-field" style="margin-bottom:20px">
+        <label class="label" for="password">Password</label>
+        <input class="input" type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
+      </div>
+      <button class="btn btn-primary btn-full btn-lg" type="submit" id="submit-btn">
+        <span>Sign in</span>
+      </button>
+    </form>
+
+    <p class="powered">Self-hosted · Non-custodial · Private</p>
+  </div>
+
+  <script src="/js/api.js?v=1.1"></script>
+  <script src="/js/auth.js?v=1.1"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', async () => {
+      const user = await checkAuth();
+      if (user) routeUser(user);
+    });
+
+    const form = document.getElementById('login-form');
+    const submitBtn = document.getElementById('submit-btn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner" style="color:white"></span>';
+      try {
+        const data = await apiFetch('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({
+            username: document.getElementById('username').value,
+            password: document.getElementById('password').value,
+          }),
+        });
+        localStorage.setItem('tipx_user', JSON.stringify(data.user));
+        setTimeout(() => routeUser(data.user), 400);
+      } catch (err) {
+        showToast(err.message, 'error');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>Sign in</span>';
+      }
+    });
+
+    function routeUser(user) {
+      const params = new URLSearchParams(window.location.search);
+      const redirect = params.get('redirect');
+      if (redirect) { window.location.href = redirect; return; }
+      if (user.role === 'admin') window.location.href = '/dashboard';
+      else if (user.role === 'streamer' && user.slug) window.location.href = `/dashboard/${user.slug}`;
+      else showToast('Routing error.', 'error');
+    }
+  </script>
+</body>
+</html>

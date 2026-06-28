@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TipX — Admin</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <style>
+    body { background: var(--bg); }
+
+    .app { display: flex; min-height: 100vh; }
+
+    /* ── Sidebar ─────────────────── */
+    .sidebar {
+      width: 216px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0;
+      height: 100vh;
+      background: var(--bg-white);
+    }
+
+    .sidebar-brand {
+      padding: 18px 20px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand-row { display: flex; align-items: center; gap: 8px; }
+    .brand-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--indigo); }
+
+    .admin-chip {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--indigo);
+      background: var(--indigo-dim);
+      border: 1px solid #c7d2fe;
+      padding: 2px 8px;
+      border-radius: 100px;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 14px 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .sidebar-user { font-size: 13px; color: var(--text-2); margin-bottom: 10px; }
+    .sidebar-user strong { color: var(--text); }
+
+    /* ── Main ───────────────────── */
+    .main { margin-left: 216px; flex: 1; }
+
+    .topbar {
+      padding: 16px 32px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-white);
+      position: sticky; top: 0; z-index: 10;
+    }
+
+    .topbar-title { font-size: 14px; font-weight: 600; }
+
+    .content { padding: 28px 32px; }
+
+    /* ── Stats ───────────────────── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--r-xl);
+      padding: 18px 20px;
+    }
+
+    .stat-label {
+      font-size: 11.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-3);
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.02em;
+    }
+
+    /* ── Grid ────────────────────── */
+    .grid-layout {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    /* ── Section card ───────────── */
+    .section-card {
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--r-xl);
+      overflow: hidden;
+    }
+
+    .section-card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-card-title { font-size: 13.5px; font-weight: 600; }
+    .section-card-sub   { font-size: 12.5px; color: var(--text-3); margin-top: 2px; }
+    .section-card-body  { padding: 20px; }
+
+    /* ── Table ───────────────────── */
+    .table-card {
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--r-xl);
+      overflow: hidden;
+    }
+
+    .table-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .streamer-name { font-size: 13.5px; font-weight: 500; }
+    .streamer-links { display: flex; gap: 12px; margin-top: 3px; }
+    .streamer-link { font-size: 12px; color: var(--text-3); }
+    .streamer-link:hover { color: var(--indigo); }
+
+    /* ── Responsive ─────────────── */
+    @media (max-width: 960px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; }
+      .content { padding: 20px 16px; }
+      .grid-layout { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body style="display: none;">
+<div class="app">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-row">
+        <div class="brand-dot"></div>
+        TipX
+      </div>
+      <div class="admin-chip">Admin</div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">Signed in as <strong id="admin-username">—</strong></div>
+      <button class="btn btn-danger-ghost btn-sm btn-full" onclick="handleLogout()">Logout</button>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <div class="main">
+
+    <div class="topbar">
+      <div class="topbar-title">Admin — Streamers</div>
+    </div>
+
+    <div class="content">
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Total streamers</div>
+          <div class="stat-value" id="stat-total-streamers">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Active</div>
+          <div class="stat-value" id="stat-active-streamers" style="color:var(--green)">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Platform volume</div>
+          <div class="stat-value" id="stat-gross-volume" style="color:var(--indigo)">฿0</div>
+        </div>
+      </div>
+
+      <!-- Grid -->
+      <div class="grid-layout">
+
+        <!-- Add streamer -->
+        <div class="section-card">
+          <div class="section-card-header">
+            <div class="section-card-title">Add streamer</div>
+            <div class="section-card-sub">Provision a new account</div>
+          </div>
+          <div class="section-card-body">
+            <form id="provision-form">
+              <div class="form-field">
+                <label class="label" for="username">Username</label>
+                <input class="input" type="text" id="username" placeholder="GamerQueen" required>
+              </div>
+              <div class="form-field">
+                <label class="label" for="slug">URL slug</label>
+                <input class="input" type="text" id="slug" placeholder="gamer-queen" required>
+                <div class="text-xs text-muted" style="margin-top:5px">tipx/[slug]</div>
+              </div>
+              <div class="form-field">
+                <label class="label" for="email">Email</label>
+                <input class="input" type="email" id="email" placeholder="streamer@gmail.com">
+              </div>
+              <div class="form-field" style="margin-bottom:20px">
+                <label class="label" for="password">Password</label>
+                <input class="input" type="password" id="password" placeholder="••••••••" required>
+              </div>
+              <button class="btn btn-primary btn-full" type="submit" id="create-btn">
+                <span>Create account</span>
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Streamers table -->
+        <div class="table-card">
+          <div class="table-header">
+            <div class="section-card-title">All streamers</div>
+            <button class="btn btn-ghost btn-sm" onclick="fetchStreamers()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38"/></svg>
+              Refresh
+            </button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Streamer</th>
+                  <th>Stripe</th>
+                  <th>Tips</th>
+                  <th>Total</th>
+                  <th>Widgets</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="streamers-list">
+                <tr>
+                  <td colspan="6" style="text-align:center; color:var(--text-3); padding:40px 0">
+                    <span class="spinner spinner-lg" style="color:var(--text-3)"></span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="/js/api.js?v=1.1"></script>
+<script src="/js/auth.js?v=1.1"></script>
+<script>
+  async function handleLogout() {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+    } catch (err) {
+      console.error('[Auth] Logout error:', err);
+    } finally {
+      localStorage.removeItem('tipx_user');
+      window.location.href = '/login';
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', async () => {
+    const user = await requireAdmin();
+    document.body.style.display = 'block';
+    document.getElementById('admin-username').textContent = user.username;
+    await fetchStreamers();
+  });
+
+  document.getElementById('username').addEventListener('input', function() {
+    document.getElementById('slug').value = this.value
+      .toLowerCase().replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-').substring(0,50);
+  });
+
+  document.getElementById('provision-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('create-btn');
+    btn.disabled = true;
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner" style="color:white"></span>';
+    try {
+      const res = await apiFetch('/admin/streamers', {
+        method: 'POST',
+        body: JSON.stringify({
+          username: document.getElementById('username').value,
+          slug: document.getElementById('slug').value,
+          email: document.getElementById('email').value,
+          password: document.getElementById('password').value
+        })
+      });
+      showToast(`${res.streamer.username} created.`, 'success');
+      document.getElementById('provision-form').reset();
+      await fetchStreamers();
+    } catch (err) { showToast(err.message, 'error'); }
+    finally { btn.disabled = false; btn.innerHTML = orig; }
+  });
+
+  async function fetchStreamers() {
+    try {
+      const data = await apiFetch('/admin/streamers');
+      renderStreamers(data.streamers);
+    } catch (err) { showToast('Error loading streamers: ' + err.message, 'error'); }
+  }
+
+  function renderStreamers(streamers) {
+    const tbody = document.getElementById('streamers-list');
+    if (!streamers.length) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-3); padding:40px 0">No streamers yet.</td></tr>`;
+      ['stat-total-streamers','stat-active-streamers','stat-gross-volume'].forEach((id, i) => {
+        document.getElementById(id).textContent = i === 2 ? '฿0' : '0';
+      });
+      return;
+    }
+
+    let active = 0, vol = 0, html = '';
+    streamers.forEach(s => {
+      if (s.is_active) active++;
+      const isExempt = s.role === 'admin' || s.slug === 'al' || s.username === 'al';
+      if (!isExempt) {
+        vol += s.total_platform_fee || 0;
+      }
+      const stripeBadge = s.stripe_onboarding_done
+        ? '<span class="badge badge-green">Connected</span>'
+        : '<span class="badge badge-amber">Pending</span>';
+      const toggleBtn = s.is_active
+        ? `<button class="btn btn-danger-ghost btn-sm" onclick="toggleActive(${s.id})">Deactivate</button>`
+        : `<button class="btn btn-success btn-sm" onclick="toggleActive(${s.id})">Activate</button>`;
+      html += `
+        <tr>
+          <td>
+            <div class="streamer-name">${s.username}</div>
+            <div class="streamer-links">
+              <a class="streamer-link" href="/${s.slug}" target="_blank">/${s.slug} ↗</a>
+              <a class="streamer-link" href="/dashboard/${s.slug}">Dashboard →</a>
+            </div>
+          </td>
+          <td>${stripeBadge}</td>
+          <td style="color:var(--text-2)">${s.total_donations}</td>
+          <td style="font-weight:600">${formatAmount(s.total_volume)}</td>
+          <td>
+            <div style="display:flex; gap:6px">
+              <button class="btn btn-ghost btn-sm" onclick="copyToClipboard('${window.location.origin}/widget/alert?token=${s.alert_token}','Alert URL')">Alert</button>
+              <button class="btn btn-ghost btn-sm" onclick="copyToClipboard('${window.location.origin}/widget/progress?token=${s.alert_token}','Goal URL')">Goal</button>
+            </div>
+          </td>
+          <td>${toggleBtn}</td>
+        </tr>`;
+    });
+
+    tbody.innerHTML = html;
+    document.getElementById('stat-total-streamers').textContent = streamers.length;
+    document.getElementById('stat-active-streamers').textContent = active;
+    document.getElementById('stat-gross-volume').textContent = formatAmount(vol);
+  }
+
+  async function toggleActive(id) {
+    try {
+      const res = await apiFetch(`/admin/streamers/${id}/toggle`, { method: 'PATCH' });
+      showToast(`${res.streamer.username} updated.`, 'success');
+      await fetchStreamers();
+    } catch (err) { showToast(err.message, 'error'); }
+  }
+
+  function copyToClipboard(url, name) {
+    navigator.clipboard.writeText(url).then(() => showToast(`${name} copied.`, 'success'));
+  }
+</script>
+</body>
+</html>

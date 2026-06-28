@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+  <title>Support on TipX</title>
+  <meta name="description" content="Send a voluntary tip to support your favorite content creator.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&display=swap" rel="stylesheet">
+  <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --indigo: #5b5fc7;
+      --indigo-soft: rgba(91,95,199,0.12);
+      --green: #22c55e;
+      --text: #111;
+      --text-2: #555;
+      --text-3: #999;
+      --border: rgba(0,0,0,0.09);
+      --t: all 0.18s ease;
+      --font: 'Inter', -apple-system, sans-serif;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    html {
+      background: #fafafa;
+      overscroll-behavior-y: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      font-family: var(--font);
+      color: var(--text);
+      min-height: 100vh;
+      min-height: 100dvh;
+      -webkit-font-smoothing: antialiased;
+      overscroll-behavior-y: none;
+    }
+
+    /* Prevent iOS zoom on input focus */
+    @media (max-width: 480px) {
+      input, textarea, select {
+        font-size: 16px !important;
+      }
+    }
+
+    /* ─── Inline body hiding (prevents flash) ── */
+    body.loading .page { visibility: hidden; }
+
+    /* ─── Loading Screen ──────────────────── */
+    #loading-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+      transition: opacity 0.4s ease, visibility 0.4s ease;
+    }
+    #loading-screen.done {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .loading-logo {
+      width: 72px;
+      height: 72px;
+      animation: logoReveal 1.0s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .loading-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 8px 24px rgba(91,95,199,0.25));
+    }
+    .loading-logo .loading-fallback {
+      display: none;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: var(--indigo);
+      color: #fff;
+      font-size: 26px;
+      font-weight: 700;
+      align-items: center;
+      justify-content: center;
+      letter-spacing: -0.02em;
+    }
+    @keyframes logoReveal {
+      from { opacity: 0; transform: scale(0.88); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    button, .btn-main, .preset-btn, .back-link {
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    button:active, .btn-main:active, .preset-btn:active {
+      transform: scale(0.97);
+    }
+
+    /* ─── Page Layout ─────────────────────── */
+    .page {
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      padding-bottom: calc(24px + var(--safe-bottom));
+    }
+
+    /* ─── Creator block ───────────────────── */
+    .creator {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: #e8e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 42px;
+      font-weight: 700;
+      color: var(--indigo);
+      margin-bottom: 20px;
+      overflow: hidden;
+      box-shadow: 0 0 0 2px rgba(0,0,0,0.04), 0 4px 24px rgba(0,0,0,0.06);
+    }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+    .creator-name {
+      font-size: 24px;
+      font-weight: 700;
+      color: #111;
+      letter-spacing: -0.03em;
+      margin-bottom: 2px;
+    }
+
+    .creator-handle {
+      font-size: 13.5px;
+      color: var(--text-3);
+      font-weight: 400;
+      letter-spacing: -0.01em;
+    }
+
+    /* ─── Goal Bar ────────────────────────── */
+    .goal-section {
+      width: 100%;
+      max-width: 420px;
+      margin-bottom: 36px;
+      display: none;
+    }
+
+    .goal-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-2);
+      margin-bottom: 10px;
+    }
+
+    .goal-track {
+      height: 6px;
+      background: rgba(0,0,0,0.07);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .goal-fill {
+      height: 100%;
+      background: var(--indigo);
+      border-radius: 99px;
+      width: 0%;
+      transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ─── Form ────────────────────────────── */
+    .form-wrap {
+      width: 100%;
+      max-width: 420px;
+    }
+
+    /* Step visibility */
+    .step { display: none; }
+    .step.active { display: block; }
+
+    /* ─── Amount section ──────────────────── */
+    .field-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-3);
+      margin-bottom: 10px;
+    }
+
+    .preset-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .preset-btn {
+      flex: 1;
+      padding: 11px 0;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-2);
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: var(--t);
+      font-family: var(--font);
+    }
+
+    .preset-btn:hover {
+      border-color: var(--indigo);
+      color: var(--indigo);
+    }
+
+    .preset-btn.sel {
+      background: var(--indigo);
+      border-color: var(--indigo);
+      color: #fff;
+    }
+
+    /* ─── Inputs ──────────────────────────── */
+    .field {
+      margin-bottom: 12px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 13px 16px;
+      font-family: var(--font);
+      font-size: 15px;
+      color: var(--text);
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      outline: none;
+      transition: var(--t);
+      display: block;
+      -webkit-appearance: none;
+    }
+
+    input:focus, textarea:focus {
+      border-color: var(--indigo);
+      box-shadow: 0 0 0 3px var(--indigo-soft);
+    }
+
+    input::placeholder, textarea::placeholder {
+      color: #bbb;
+      font-weight: 400;
+    }
+
+    textarea {
+      resize: none;
+      height: 88px;
+      line-height: 1.5;
+    }
+
+    /* Remove number arrows */
+    input[type=number]::-webkit-outer-spin-button,
+    input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+    input[type=number] { -moz-appearance: textfield; }
+
+    /* ─── Separator ───────────────────────── */
+    .sep {
+      height: 1px;
+      background: rgba(0,0,0,0.06);
+      margin: 20px 0;
+    }
+
+    /* ─── Primary Button ──────────────────── */
+    .btn-main {
+      width: 100%;
+      padding: 15px;
+      font-family: var(--font);
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+      background: var(--text);
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: var(--t);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .btn-main:hover:not(:disabled) {
+      background: #2a2a2a;
+      transform: translateY(-1px);
+    }
+
+    .btn-main:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-main.green {
+      background: var(--green);
+    }
+    .btn-main.green:hover:not(:disabled) { background: #16a34a; }
+
+    /* ─── Glassmorphism & Dark Themes ─────── */
+    body.theme-glass input, 
+    body.theme-glass textarea, 
+    body.theme-glass .preset-btn {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+    }
+    body.theme-glass input::placeholder, 
+    body.theme-glass textarea::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+    body.theme-glass input:focus, 
+    body.theme-glass textarea:focus {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.4);
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.15);
+    }
+    body.theme-glass .preset-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
+      color: #fff;
+    }
+    body.theme-glass .preset-btn.sel {
+      background: rgba(255, 255, 255, 0.9);
+      color: #000;
+      border-color: rgba(255, 255, 255, 0.9);
+    }
+    body.theme-glass .btn-main { background: rgba(255,255,255,0.9); color: #000; }
+    body.theme-glass .btn-main:hover:not(:disabled) { background: #fff; }
+    
+    body.theme-glass .field-label { color: rgba(255,255,255,0.8); }
+    body.theme-glass .creator-name { color: #fff; }
+    body.theme-glass .creator-handle { color: rgba(255,255,255,0.7); }
+    body.theme-glass .brand-footer { color: rgba(255,255,255,0.5); }
+    body.theme-glass .brand-footer span { color: rgba(255,255,255,0.8); }
+    body.theme-glass .goal-header span { color: rgba(255,255,255,0.8); }
+    body.theme-glass .goal-track { background: rgba(255,255,255,0.15); }
+    body.theme-glass .goal-fill { background: #fff; }
+    body.theme-glass .tip-info { color: rgba(255,255,255,0.6); }
+    body.theme-glass .sep { background: rgba(255,255,255,0.15); }
+    body.theme-glass .back-link { color: rgba(255,255,255,0.6); }
+    body.theme-glass .back-link:hover { color: #fff; }
+    body.theme-glass .legal-block { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); }
+    body.theme-glass .legal-block p { color: rgba(255,255,255,0.5); }
+
+    /* For solid dark colors */
+    body.theme-dark input, 
+    body.theme-dark textarea, 
+    body.theme-dark .preset-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+    body.theme-dark input::placeholder, 
+    body.theme-dark textarea::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+    }
+    body.theme-dark .preset-btn:hover { background: rgba(255, 255, 255, 0.1); }
+    body.theme-dark .preset-btn.sel { background: var(--indigo); color: #fff; border-color: var(--indigo); }
+    body.theme-dark .field-label { color: rgba(255,255,255,0.7); }
+    body.theme-dark .creator-name { color: #fff; }
+    body.theme-dark .creator-handle { color: rgba(255,255,255,0.6); }
+    body.theme-dark .brand-footer { color: rgba(255,255,255,0.4); }
+    body.theme-dark .brand-footer span { color: rgba(255,255,255,0.7); }
+    body.theme-dark .goal-header span { color: rgba(255,255,255,0.8); }
+    body.theme-dark .goal-track { background: rgba(255,255,255,0.15); }
+    body.theme-dark .tip-info { color: rgba(255,255,255,0.5); }
+    body.theme-dark .sep { background: rgba(255,255,255,0.1); }
+    body.theme-dark .back-link { color: rgba(255,255,255,0.6); }
+    body.theme-dark .back-link:hover { color: #fff; }
+    body.theme-dark .legal-block { background: rgba(0,0,0,0.2); border-color: rgba(255,255,255,0.05); }
+    body.theme-dark .legal-block p { color: rgba(255,255,255,0.4); }
+
+    /* ─── Back link ───────────────────────── */
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--text-3);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      margin-bottom: 24px;
+      font-family: var(--font);
+      transition: var(--t);
+    }
+    .back-link:hover { color: var(--text); }
+
+    /* ─── Compliance section ──────────────── */
+    .legal-block {
+      margin-top: 20px;
+      padding: 16px;
+      border: 1px solid rgba(0,0,0,0.07);
+      border-radius: 10px;
+      background: rgba(0,0,0,0.015);
+    }
+
+    .legal-block p {
+      font-size: 11.5px;
+      color: var(--text-3);
+      line-height: 1.65;
+      margin-bottom: 6px;
+    }
+    .legal-block p:last-child { margin-bottom: 0; }
+
+    .legal-block strong {
+      color: var(--text-2);
+      font-weight: 600;
+    }
+
+    /* ─── Secure badge ────────────────────── */
+    .secure-line {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-3);
+      margin-top: 12px;
+    }
+
+    .secure-line svg { opacity: 0.5; }
+
+    /* ─── Success ─────────────────────────── */
+    .success-wrap {
+      text-align: center;
+      padding: 40px 0;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #step-success.active .success-wrap {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .success-circle {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: rgba(34, 197, 94, 0.12);
+      color: var(--green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      margin: 0 auto 20px;
+      opacity: 0;
+      transform: scale(0.5);
+      transition: opacity 0.4s ease 0.15s, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s;
+    }
+    #step-success.active .success-circle {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .success-wrap h2 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.4s ease 0.3s, transform 0.4s ease 0.3s;
+    }
+    #step-success.active .success-wrap h2 {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .success-wrap p {
+      font-size: 14px;
+      color: var(--text-2);
+      margin-bottom: 28px;
+      line-height: 1.6;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.4s ease 0.45s, transform 0.4s ease 0.45s;
+    }
+    #step-success.active .success-wrap p {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .success-wrap .btn-main {
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.4s ease 0.6s, transform 0.4s ease 0.6s;
+    }
+    #step-success.active .success-wrap .btn-main {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ─── Branding ────────────────────────── */
+    .brand-footer {
+      margin-top: 36px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-3);
+      text-align: center;
+      text-decoration: none;
+    }
+    .brand-footer span { color: var(--indigo); }
+
+    /* ─── Toast ───────────────────────────── */
+    #toast-root {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+      min-width: 280px;
+      max-width: 360px;
+    }
+    .t-item {
+      background: #111;
+      color: #fff;
+      font-size: 13.5px;
+      font-weight: 500;
+      padding: 12px 18px;
+      border-radius: 99px;
+      text-align: center;
+      animation: tIn 0.2s ease;
+    }
+    @keyframes tIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
+
+    /* ─── Spinner ─────────────────────────── */
+    .spin {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: rot 0.7s linear infinite;
+    }
+    @keyframes rot { to { transform: rotate(360deg); } }
+
+    /* ─── Amount Summary (Step 2 header) ──── */
+    .amount-summary {
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      color: var(--text);
+      text-align: center;
+      margin-bottom: 4px;
+    }
+    .amount-summary-sub {
+      font-size: 13px;
+      color: var(--text-3);
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    /* Payment element styling fix */
+    #payment-element { margin-bottom: 16px; }
+
+    /* Contrast upgrades for dark and glass themes */
+    body.theme-glass .amount-summary,
+    body.theme-dark .amount-summary,
+    body.theme-glass .success-wrap h2,
+    body.theme-dark .success-wrap h2,
+    body.theme-glass .amount-summary-sub #pay-creator-name,
+    body.theme-dark .amount-summary-sub #pay-creator-name {
+      color: #ffffff !important;
+    }
+
+    body.theme-glass .amount-summary-sub,
+    body.theme-dark .amount-summary-sub,
+    body.theme-glass .success-wrap p,
+    body.theme-dark .success-wrap p,
+    body.theme-glass .secure-line,
+    body.theme-dark .secure-line {
+      color: rgba(255, 255, 255, 0.75) !important;
+    }
+
+    @media (max-width: 480px) {
+      .page { padding: 32px 20px calc(48px + var(--safe-bottom)); justify-content: flex-start; padding-top: 48px; }
+      .creator { margin-bottom: 32px; }
+      .creator-name { font-size: 20px; }
+      .avatar { width: 96px; height: 96px; font-size: 34px; margin-bottom: 16px; }
+      .amount-summary { font-size: 28px; }
+      .preset-btn { padding: 12px 0; font-size: 13.5px; }
+      .btn-main { padding: 14px; }
+      .legal-block p { font-size: 11px; }
+      .success-circle { width: 64px; height: 64px; font-size: 28px; }
+      .success-wrap h2 { font-size: 20px; }
+    }
+  </style>
+</head>
+<body class="loading">
+
+<div id="loading-screen">
+  <div class="loading-logo">
+    <img src="/logo-white.png" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+    <div class="loading-fallback">T</div>
+  </div>
+</div>
+
+<div id="toast-root"></div>
+
+<div class="page">
+
+  <!-- Creator -->
+  <div class="creator">
+    <div class="avatar" id="avatar">?</div>
+    <div class="creator-name" id="creator-name">Loading…</div>
+    <div class="creator-handle" id="creator-handle"></div>
+  </div>
+
+  <!-- Goal -->
+  <div class="goal-section" id="goal-section">
+    <div class="goal-header">
+      <span id="goal-label">Goal</span>
+      <span id="goal-amounts">฿0 / ฿0</span>
+    </div>
+    <div class="goal-track">
+      <div class="goal-fill" id="goal-fill"></div>
+    </div>
+  </div>
+
+  <!-- Form area -->
+  <div class="form-wrap" id="main-form-area">
+
+    <!-- ── Step 1 ── -->
+    <div class="step active" id="step-form">
+
+      <div class="field-label">Amount (THB)</div>
+      <div class="preset-row">
+        <button class="preset-btn" data-v="50">฿50</button>
+        <button class="preset-btn" data-v="100">฿100</button>
+        <button class="preset-btn" data-v="300">฿300</button>
+        <button class="preset-btn" data-v="500">฿500</button>
+      </div>
+
+      <div class="field">
+        <input type="number" id="amount" placeholder="Or type an amount (min ฿20)" min="20">
+      </div>
+
+      <div class="sep"></div>
+
+      <div class="field">
+        <input type="text" id="donor-name" placeholder="Your display name (optional)" maxlength="50">
+      </div>
+
+      <div class="field">
+        <input type="email" id="donor-email" placeholder="Email for receipt (optional)">
+      </div>
+
+      <div class="field">
+        <textarea id="message" placeholder="Leave a message for the creator…" maxlength="255"></textarea>
+      </div>
+
+      <div class="sep"></div>
+
+      <button class="btn-main" id="btn-continue">Continue →</button>
+
+      <div class="legal-block">
+        <p><strong>What is this?</strong> TipX lets viewers send voluntary monetary tips ("Tips") directly to independent content creators to express gratitude and support for their streams, videos, and other digital creative work.</p>
+        <p><strong>Not a purchase.</strong> A Tip is a voluntary, one-way payment made as a gift. It does not constitute a purchase of any product, service, or digital good, and does not entitle the sender to any reward, refund, or deliverable.</p>
+        <p><strong>No refunds.</strong> All Tips are final and non-refundable once processed. By continuing, you confirm this is a voluntary gift.</p>
+        <p><strong>Payments by Stripe.</strong> All payments are processed securely by Stripe and are subject to Stripe's <a href="https://stripe.com/legal/consumer" target="_blank" style="color:var(--indigo)">Terms of Service</a>.</p>
+      </div>
+
+      <div class="secure-line">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Secured by Stripe
+      </div>
+
+    </div><!-- /step-form -->
+
+    <!-- ── Step 2 ── -->
+    <div class="step" id="step-payment">
+      <button class="back-link" id="btn-back">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Back
+      </button>
+
+      <div class="amount-summary" id="pay-amount-display">฿—</div>
+      <div class="amount-summary-sub" id="pay-name-display">Supporting <span id="pay-creator-name">—</span></div>
+
+      <div id="payment-element"></div>
+
+      <button class="btn-main green" id="btn-pay">Confirm &amp; Pay</button>
+
+      <div class="secure-line" style="margin-top:16px">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        256-bit SSL · Processed by Stripe
+      </div>
+    </div><!-- /step-payment -->
+
+    <!-- ── Step 3 Success ── -->
+    <div class="step" id="step-success">
+      <div class="success-wrap">
+        <div class="success-circle">✓</div>
+        <h2>Tip sent! 🎉</h2>
+        <p id="success-msg">Your support means a lot to the creator.<br>Thank you for making streaming possible.</p>
+        <button class="btn-main" onclick="resetPage()" style="max-width:200px; margin:0 auto;">Send another</button>
+      </div>
+    </div>
+
+  </div><!-- /form-wrap -->
+
+  <a href="https://re-codex.com" class="brand-footer" target="_blank">
+    TipX by <span>Re:CodeX</span>
+  </a>
+
+</div><!-- /page -->
+
+<script src="/js/api.js?v=1.1"></script>
+<script>
+  // ── State ──────────────────────────────────────────
+  let slug = location.pathname.split('/').filter(Boolean).pop();
+  let stripeKey = '';
+  let stripe = null;
+  let elements = null;
+  let selectedAmount = null;
+  let currentUser = {};
+  let currentPaymentIntentId = null;
+  let currentStripeAccountId = null;
+
+  // ── Toast ──────────────────────────────────────────
+  function toast(msg, dur = 3500) {
+    const root = document.getElementById('toast-root');
+    const el = document.createElement('div');
+    el.className = 't-item';
+    el.textContent = msg;
+    root.appendChild(el);
+    setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity 0.2s'; setTimeout(() => el.remove(), 200); }, dur);
+  }
+
+  // ── Step control ───────────────────────────────────
+  function showStep(name) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById('step-' + name).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── Presets ────────────────────────────────────────
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('sel'));
+      btn.classList.add('sel');
+      document.getElementById('amount').value = btn.dataset.v;
+      selectedAmount = parseInt(btn.dataset.v);
+    });
+  });
+
+  document.getElementById('amount').addEventListener('input', function() {
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('sel'));
+    selectedAmount = parseFloat(this.value) || null;
+  });
+
+  // ── Load profile ───────────────────────────────────
+  async function loadProfile() {
+    if (!slug) return showErr('No creator found.');
+    try {
+      const data = await apiFetch('/public/' + slug);
+      const s = data.streamer;
+      currentUser = s;
+      stripeKey = data.stripe_public_key;
+
+      if (!s.stripe_onboarding_done) {
+        const btn = document.getElementById('btn-continue');
+        btn.disabled = true;
+        btn.textContent = 'Not accepting tips right now';
+        btn.style.opacity = '0.6';
+        btn.style.cursor = 'not-allowed';
+        btn.style.background = 'var(--border)';
+        btn.style.color = 'var(--text-3)';
+
+        // Disable input fields
+        document.getElementById('amount').disabled = true;
+        document.getElementById('donor-name').disabled = true;
+        document.getElementById('donor-email').disabled = true;
+        document.getElementById('message').disabled = true;
+
+        // Disable preset buttons
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+          btn.style.pointerEvents = 'none';
+          btn.style.opacity = '0.5';
+        });
+      }
+
+      document.title = s.username + ' · TipX';
+      document.getElementById('creator-name').textContent = s.username;
+      document.getElementById('creator-handle').textContent = '@' + s.slug;
+      document.getElementById('pay-creator-name').textContent = s.username;
+
+      const av = document.getElementById('avatar');
+      av.innerHTML = '';
+      if (s.avatar_url) {
+        const img = document.createElement('img');
+        img.src = s.avatar_url;
+        img.alt = "";
+        av.appendChild(img);
+      } else {
+        av.textContent = s.username.charAt(0).toUpperCase();
+      }
+
+      // Background
+      if (s.bg_image_url) {
+        Object.assign(document.body.style, {
+          background: 'linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.65)), url(' + s.bg_image_url + ') center/cover no-repeat fixed',
+        });
+        document.body.classList.add('theme-glass');
+      } else if (s.bg_color) {
+        document.body.style.background = s.bg_color;
+        const isDark = hexBrightness(s.bg_color) < 140;
+        if (isDark) document.body.classList.add('theme-dark');
+      }
+
+      // Goal
+      if (s.goal_amount > 0) {
+        const gs = document.getElementById('goal-section');
+        gs.style.display = 'block';
+        const cfg = s.progress_config || {};
+        document.getElementById('goal-label').textContent = cfg.goal_label || 'Goal';
+        document.getElementById('goal-amounts').textContent =
+          '฿' + (s.goal_current/100).toLocaleString() + ' / ฿' + (s.goal_amount/100).toLocaleString();
+        const pct = Math.min((s.goal_current / s.goal_amount) * 100, 100);
+        setTimeout(() => { document.getElementById('goal-fill').style.width = pct + '%'; }, 200);
+      }
+
+      document.getElementById('loading-screen').classList.add('done');
+      document.body.classList.remove('loading');
+    } catch (e) { showErr(e.message); document.getElementById('loading-screen').classList.add('done'); document.body.classList.remove('loading'); }
+  }
+
+  function adaptDark() {
+    // Deprecated: handled by .theme-glass and .theme-dark classes
+  }
+
+  function hexBrightness(hex) {
+    const c = hex.replace('#','');
+    if (c.length !== 6) return 255;
+    return (parseInt(c.substr(0,2),16)*299 + parseInt(c.substr(2,2),16)*587 + parseInt(c.substr(4,2),16)*114) / 1000;
+  }
+
+  function showErr(msg) {
+    document.getElementById('main-form-area').innerHTML =
+      '<div style="text-align:center;padding:60px 0"><div style="font-size:40px;margin-bottom:16px">😕</div><p style="font-size:17px;font-weight:600;margin-bottom:8px">Creator not found</p><p style="font-size:14px;color:#999">' + msg + '</p></div>';
+  }
+
+  // ── Continue button ────────────────────────────────
+  document.getElementById('btn-continue').addEventListener('click', async () => {
+    // Prevent double-creation: cancel any existing unpaid PaymentIntent first
+    if (currentPaymentIntentId) {
+      cancelCurrentPayment();
+      // Wait a beat for the cancel to fire
+      await new Promise(r => setTimeout(r, 100));
+    }
+
+    const amtInput = parseFloat(document.getElementById('amount').value);
+    const amt = amtInput || selectedAmount;
+    if (!amt || amt < 20) { toast('Please enter an amount of at least ฿20.'); return; }
+
+    const btn = document.getElementById('btn-continue');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spin"></div>';
+
+    try {
+      const idempotencyKey = crypto.randomUUID();
+      const res = await apiFetch('/public/' + slug + '/payment-intent', {
+        method: 'POST',
+        body: JSON.stringify({
+          amount: Math.round(amt * 100),
+          donor_name: document.getElementById('donor-name').value.trim() || 'Anonymous',
+          donor_email: document.getElementById('donor-email').value.trim(),
+          message: document.getElementById('message').value.trim(),
+          idempotency_key: idempotencyKey
+        })
+      });
+
+      currentPaymentIntentId = res.payment_intent_id;
+      currentStripeAccountId = res.stripe_account_id;
+      sessionStorage.setItem('tipx_stripe_account', res.stripe_account_id || '');
+
+      if (res.stripe_account_id) {
+        stripe = Stripe(stripeKey, { stripeAccount: res.stripe_account_id });
+      } else {
+        stripe = Stripe(stripeKey);
+      }
+      
+      const isGlass = document.body.classList.contains('theme-glass');
+      const isDarkTheme = document.body.classList.contains('theme-dark') || isGlass;
+
+      elements = stripe.elements({
+        clientSecret: res.client_secret,
+        appearance: {
+          theme: 'none',
+          variables: {
+            fontFamily: '"Inter", -apple-system, sans-serif',
+            fontSizeBase: '15px',
+            colorText: isDarkTheme ? '#ffffff' : '#111111',
+            colorBackground: isGlass ? 'rgba(255,255,255,0.08)' : (isDarkTheme ? '#1e293b' : '#ffffff'),
+            colorTextPlaceholder: isDarkTheme ? 'rgba(255,255,255,0.5)' : '#bbbbbb',
+            colorPrimary: isGlass ? '#ffffff' : '#5b5fc7',
+            colorDanger: '#e53935',
+            borderRadius: '12px',
+          },
+          rules: {
+            '.Block': {
+              border: isGlass ? '1px solid rgba(255,255,255,0.15)' : (isDarkTheme ? '1px solid rgba(255,255,255,0.1)' : '1.5px solid rgba(0,0,0,0.09)'),
+              borderRadius: '12px',
+              backgroundColor: isGlass ? 'rgba(255,255,255,0.08)' : (isDarkTheme ? '#1e293b' : '#ffffff'),
+              color: isDarkTheme ? '#ffffff' : '#111111',
+              padding: '16px 20px',
+              boxShadow: 'none',
+            },
+            '.Input': {
+              border: isGlass ? '1px solid rgba(255,255,255,0.15)' : (isDarkTheme ? '1px solid rgba(255,255,255,0.1)' : '1.5px solid rgba(0,0,0,0.09)'),
+              borderRadius: '12px',
+              padding: '13px 16px',
+              boxShadow: 'none',
+              backgroundColor: isGlass ? 'rgba(255,255,255,0.08)' : (isDarkTheme ? 'rgba(255,255,255,0.05)' : '#fff'),
+              fontSize: '15px',
+              color: isDarkTheme ? '#fff' : '#111',
+            },
+            '.Input:focus': {
+              border: isGlass ? '1px solid rgba(255,255,255,0.4)' : (isDarkTheme ? '1px solid rgba(255,255,255,0.3)' : '1.5px solid #5b5fc7'),
+              boxShadow: isGlass ? '0 0 0 3px rgba(255,255,255,0.15)' : (isDarkTheme ? 'none' : '0 0 0 3px rgba(91,95,199,0.12)'),
+              backgroundColor: isGlass ? 'rgba(255,255,255,0.12)' : (isDarkTheme ? 'rgba(255,255,255,0.08)' : '#fff'),
+            },
+            '.Label': {
+              fontSize: '11px',
+              fontWeight: '600',
+              textTransform: 'uppercase',
+              letterSpacing: '0.07em',
+              color: isGlass ? 'rgba(255,255,255,0.8)' : (isDarkTheme ? 'rgba(255,255,255,0.7)' : '#999'),
+              marginBottom: '8px',
+            },
+            '.Tab': {
+              border: isGlass ? '1px solid rgba(255,255,255,0.15)' : (isDarkTheme ? '1px solid rgba(255,255,255,0.1)' : '1.5px solid rgba(0,0,0,0.09)'),
+              borderRadius: '10px',
+              backgroundColor: isGlass ? 'rgba(255,255,255,0.08)' : (isDarkTheme ? 'rgba(255,255,255,0.05)' : '#fff'),
+              boxShadow: 'none',
+              padding: '10px 14px',
+              color: isDarkTheme ? 'rgba(255,255,255,0.7)' : '#555',
+            },
+            '.Tab:hover': { 
+              borderColor: isGlass ? 'rgba(255,255,255,0.4)' : (isDarkTheme ? 'rgba(255,255,255,0.3)' : '#5b5fc7'),
+              color: isDarkTheme ? '#fff' : '#5b5fc7' 
+            },
+            '.Tab--selected': {
+              border: isGlass ? '1px solid rgba(255,255,255,0.9)' : (isDarkTheme ? '1px solid var(--indigo)' : '1.5px solid #5b5fc7'),
+              color: isGlass ? '#000' : (isDarkTheme ? '#fff' : '#5b5fc7'),
+              backgroundColor: isGlass ? 'rgba(255,255,255,0.9)' : (isDarkTheme ? 'var(--indigo)' : 'rgba(91,95,199,0.06)'),
+              boxShadow: 'none',
+            },
+            '.TabIcon--selected': { fill: isGlass ? '#000' : (isDarkTheme ? '#fff' : '#5b5fc7') },
+            '.Error': { fontSize: '13px', color: '#e53935' },
+          }
+        }
+      });
+
+      elements.create('payment', {
+        layout: 'tabs',
+        fields: { billingDetails: { email: 'never' } }
+      }).mount('#payment-element');
+
+      // Update step 2 header
+      document.getElementById('pay-amount-display').textContent =
+        '฿' + amt.toLocaleString();
+
+      window.history.pushState({ step: 'payment' }, '');
+      showStep('payment');
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = 'Continue →';
+    }
+  });
+
+  // ── Cancel Function ────────────────────────────────
+  function cancelCurrentPayment() {
+    if (currentPaymentIntentId) {
+      apiFetch('/public/payment-intent/cancel', {
+        method: 'POST',
+        body: JSON.stringify({ payment_intent_id: currentPaymentIntentId })
+      }).catch(err => console.warn('[Checkout] Failed to cancel PaymentIntent:', err.message));
+      currentPaymentIntentId = null;
+    }
+  }
+
+  // ── History Navigation (Popstate) ──────────────────
+  window.addEventListener('popstate', (event) => {
+    const state = event.state;
+    if (state && state.step === 'form') {
+      if (document.getElementById('step-payment').classList.contains('active')) {
+        cancelCurrentPayment();
+        showStep('form');
+      }
+    } else if (state && state.step === 'payment') {
+      if (document.getElementById('step-form').classList.contains('active')) {
+        showStep('payment');
+      }
+    }
+  });
+
+  // ── Back ───────────────────────────────────────────
+  document.getElementById('btn-back').addEventListener('click', () => {
+    window.history.back();
+  });
+
+  // ── Pay ────────────────────────────────────────────
+  document.getElementById('btn-pay').addEventListener('click', async () => {
+    const btn = document.getElementById('btn-pay');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spin"></div>';
+
+    const email = document.getElementById('donor-email').value.trim() || 'anonymous@tipx.app';
+    try {
+      const { error } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: location.origin + location.pathname + '?paid=1',
+          payment_method_data: { billing_details: { email } }
+        }
+      });
+      if (error) { toast(error.message); btn.disabled = false; btn.innerHTML = 'Confirm &amp; Pay'; }
+    } catch (e) {
+      toast(e.message);
+      btn.disabled = false;
+      btn.innerHTML = 'Confirm &amp; Pay';
+    }
+  });
+
+  function resetPage() { location.href = location.pathname; }
+
+  // ── Init ───────────────────────────────────────────
+  (async () => {
+    window.history.replaceState({ step: 'form' }, '');
+    await loadProfile();
+
+    const params = new URLSearchParams(location.search);
+    const clientSecret = params.get('payment_intent_client_secret');
+    const redirectStatus = params.get('redirect_status');
+
+    if (clientSecret) {
+      const isFeeExempt = currentUser.role === 'admin' || currentUser.slug === 'al' || currentUser.username === 'al';
+      if (isFeeExempt) {
+        stripe = Stripe(stripeKey);
+      } else {
+        const storedAccountId = sessionStorage.getItem('tipx_stripe_account');
+        stripe = storedAccountId ? Stripe(stripeKey, { stripeAccount: storedAccountId }) : Stripe(stripeKey);
+      }
+
+      try {
+        const { paymentIntent } = await stripe.retrievePaymentIntent(clientSecret);
+        if (paymentIntent && paymentIntent.status === 'succeeded') {
+          window.history.replaceState({ step: 'success' }, document.title, location.pathname);
+          showStep('success');
+        } else {
+          // Clear query params so refresh doesn't trigger error again
+          window.history.replaceState({ step: 'form' }, document.title, location.pathname);
+          toast('การชำระเงินไม่เสร็จสมบูรณ์ หรือคุณยกเลิกการทำรายการ');
+        }
+      } catch (err) {
+        console.error("Error retrieving payment intent:", err);
+        // Fallback checks
+        if (redirectStatus === 'succeeded') {
+          window.history.replaceState({ step: 'success' }, document.title, location.pathname);
+          showStep('success');
+        } else {
+          window.history.replaceState({ step: 'form' }, document.title, location.pathname);
+          toast('การชำระเงินไม่สำเร็จ');
+        }
+      }
+    }
+  })();
+
+  // Minimal apiFetch if not loaded by api.js (fallback)
+  if (typeof apiFetch === 'undefined') {
+    window.apiFetch = async (path, opts = {}) => {
+      const res = await fetch('/api' + path, {
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        ...opts
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || 'Request failed');
+      return json;
+    };
+  }
+</script>
+
+</body>
+</html>

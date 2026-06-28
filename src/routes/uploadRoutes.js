@@ -1,0 +1,68 @@
+const express = require('express');
+const router = express.Router();
+const multer = require('multer');
+const { PutObjectCommand } = require('@aws-sdk/client-s3');
+const { s3Client } = require('../config/r2');
+const { requireAuth, requireSelf } = require('../middleware/auth');
+const crypto = require('crypto');
+const rateLimiter = require('../middleware/rateLimiter');
+
+// Rate limiter: Max 10 uploads per 10 minutes per IP
+const uploadLimiter = rateLimiter(10 * 60 * 1000, 10, 'Too many uploads. Please wait 10 minutes before trying again.');
+
+// Configure multer — only allow image MIME types
+const ALLOWED_MIME = ['image/webp', 'image/jpeg', 'image/png', 'image/gif', 'image/avif'];
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  },
+  fileFilter: (_req, file, cb) => {
+    if (ALLOWED_MIME.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error(`File type '${file.mimetype}' is not allowed. Only images (webp, jpeg, png, gif, avif) are accepted.`));
+    }
+  }
+});
+
+// POST /api/dashboard/:slug/upload
+router.post('/:slug/upload', uploadLimiter, requireAuth, requireSelf, upload.single('image'), async (req, res) => {
+  const { slug } = req.params;
+  const { type } = req.query; // 'avatar' or 'background'
+
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image file uploaded.' });
+    }
+
+    const bucketName = process.env.CLOUDFLARE_R2_BUCKET_NAME;
+    const publicUrl = process.env.CLOUDFLARE_R2_PUBLIC_URL;
+
+    if (!bucketName || !publicUrl) {
+      return res.status(500).json({ error: 'Cloudflare R2 is not fully configured.' });
+    }
+
+    const folder = type === 'background' ? 'backgrounds' : 'avatars';
+    const randomSuffix = crypto.randomBytes(4).toString('hex');
+    const filename = `${folder}/${slug}_${Date.now()}_${randomSuffix}.webp`;
+
+    const command = new PutObjectCommand({
+      Bucket: bucketName,
+      Key: filename,
+      Body: req.file.buffer,
+      ContentType: 'image/webp',
+    });
+
+    await s3Client.send(command);
+
+    const imageUrl = `${publicUrl.replace(/\/$/, '')}/${filename}`;
+    return res.json({ url: imageUrl });
+  } catch (err) {
+    console.error('[Upload] Error uploading to R2:', err);
+    return res.status(500).json({ error: 'Failed to upload image.' });
+  }
+});
+
+module.exports = router;

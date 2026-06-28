@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TipX — Dashboard</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <style>
+    body { background: var(--bg); }
+
+    /* ── Shell ──────────────────── */
+    .app { display: flex; min-height: 100vh; }
+
+    /* ── Sidebar ────────────────── */
+    .sidebar {
+      width: 216px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+      position: fixed;
+      top: 0; left: 0;
+      height: 100vh;
+      background: var(--bg-white);
+      box-shadow: 1px 0 0 var(--border);
+    }
+
+    .sidebar-brand {
+      padding: 18px 20px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--indigo); flex-shrink: 0; }
+
+    .sidebar-section {
+      padding: 12px 12px 4px;
+      font-size: 10.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-3);
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 12px;
+      margin: 1px 8px;
+      font-size: 13.5px;
+      font-weight: 450;
+      color: var(--text-2);
+      cursor: pointer;
+      border-radius: var(--r-md);
+      transition: var(--t);
+      border: none;
+      background: none;
+      width: calc(100% - 16px);
+      text-align: left;
+    }
+    .nav-item:hover { background: var(--bg); color: var(--text); }
+    .nav-item.active { background: var(--indigo-dim); color: var(--indigo); font-weight: 500; }
+    .nav-item svg { flex-shrink: 0; }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 14px 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .sidebar-user {
+      font-size: 13px;
+      color: var(--text-2);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .online-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      flex-shrink: 0;
+    }
+
+    /* ── Main ───────────────────── */
+    .main {
+      margin-left: 216px;
+      flex: 1;
+      max-width: calc(100vw - 216px);
+    }
+
+    /* ── Topbar ─────────────────── */
+    .topbar {
+      padding: 16px 32px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-white);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .page-title { font-size: 14px; font-weight: 600; }
+
+    /* ── Content ────────────────── */
+    .content { padding: 28px 32px; }
+
+    /* ── Alert banner ───────────── */
+    .alert-banner {
+      display: none;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 16px;
+      background: var(--red-dim);
+      border: 1px solid var(--red-border);
+      border-radius: var(--r-lg);
+      margin-bottom: 24px;
+    }
+
+    /* ── Tab bar ─────────────────── */
+    .tab-bar {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+
+    .tab-btn {
+      padding: 10px 16px;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--text-2);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      cursor: pointer;
+      transition: var(--t);
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--indigo); border-bottom-color: var(--indigo); }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── OBS Links ──────────────── */
+    .obs-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .obs-row:last-child { border-bottom: none; }
+    .obs-label { font-size: 13.5px; font-weight: 500; }
+    .obs-hint  { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+
+    /* ── Preview ────────────────── */
+    .preview-stage {
+      background: #1a1a2e;
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      height: 220px;
+      position: relative;
+      overflow: hidden;
+    }
+    .preview-label {
+      position: absolute;
+      top: 10px; left: 10px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: rgba(255,255,255,0.3);
+      background: rgba(0,0,0,0.4);
+      padding: 3px 8px;
+      border-radius: var(--r-sm);
+    }
+
+    /* ── Section card ────────────── */
+    .section-card {
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--r-xl);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .section-card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .section-card-title { font-size: 13.5px; font-weight: 600; }
+    .section-card-body { padding: 20px; }
+
+    /* ── Settings grid ───────────── */
+    .settings-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .settings-grid .span-2 { grid-column: span 2; }
+
+    /* ── Feed ────────────────────── */
+    .feed-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .feed-row:last-child { border-bottom: none; }
+    .feed-donor { font-size: 13.5px; font-weight: 500; }
+    .feed-time  { font-size: 12px; color: var(--text-3); }
+    .feed-msg   { font-size: 13px; color: var(--text-2); margin-top: 5px; padding-left: 10px; border-left: 2px solid var(--border-strong); }
+    .feed-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+    .feed-amount { font-size: 15px; font-weight: 600; color: var(--green); }
+
+    /* ── Color row ───────────────── */
+    .color-row { display: flex; gap: 8px; }
+    .color-row .input { flex: 1; }
+    .color-row input[type=color] { width: 38px; height: 38px; flex-shrink: 0; }
+
+    /* ── Section divider ─────────── */
+    .section-divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+    /* ── Upload Group ────────────── */
+    .upload-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+    .avatar-preview-img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      object-fit: cover;
+      background: var(--bg);
+      flex-shrink: 0;
+    }
+    .bg-preview-img {
+      width: 80px;
+      height: 50px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      object-fit: cover;
+      background: var(--bg);
+      flex-shrink: 0;
+    }
+    .upload-btn-wrapper {
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+    }
+    .upload-btn-wrapper input[type=file] {
+      position: absolute;
+      left: 0;
+      top: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ── Responsive ─────────────── */
+    @media (max-width: 880px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; max-width: 100vw; }
+      .content { padding: 20px 16px; }
+      .topbar { padding: 14px 16px; }
+      .settings-grid { grid-template-columns: 1fr; }
+      .settings-grid .span-2 { grid-column: span 1; }
+    }
+  </style>
+</head>
+<body style="display: none;">
+<div class="app">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-dot"></div>
+      TipX
+    </div>
+
+    <div style="padding: 8px 0">
+      <div class="sidebar-section">Menu</div>
+      <button class="nav-item active" id="nav-overview" onclick="showTab('overview')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Overview
+      </button>
+      <button class="nav-item" id="nav-settings" onclick="showTab('settings')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        Widgets
+      </button>
+      <button class="nav-item" id="nav-profile" onclick="showTab('profile')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 20v-1a6 6 0 0 1 12 0v1"/></svg>
+        Profile
+      </button>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="online-dot"></div>
+        <span id="streamer-username" style="font-weight:500; color:var(--text)">—</span>
+      </div>
+      <div style="display:flex; gap:6px">
+        <a id="view-page-btn" href="#" target="_blank" class="btn btn-ghost btn-sm" style="flex:1; justify-content:center">View page</a>
+        <button class="btn btn-danger-ghost btn-sm" onclick="handleLogout()" style="flex:1">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Topbar -->
+    <div class="topbar">
+      <span class="page-title" id="topbar-title">Overview</span>
+      <button class="btn btn-ghost btn-sm" onclick="loadDonationsLog()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38"/></svg>
+        Refresh
+      </button>
+    </div>
+
+    <div class="content">
+
+      <!-- Stripe banner -->
+      <div class="alert-banner" id="stripe-onboarding-banner">
+        <div style="color:var(--red); font-size:16px; margin-top:1px">⚠</div>
+        <div style="flex:1">
+          <div style="font-size:13.5px; font-weight:600; margin-bottom:3px">Connect your Stripe account</div>
+          <div class="text-sm text-muted">Link a Stripe account to receive PromptPay payouts directly.</div>
+        </div>
+        <button class="btn btn-danger-ghost btn-sm" onclick="startStripeOnboarding()" id="onboard-btn">Connect</button>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tab-bar">
+        <button class="tab-btn active" id="tab-btn-overview" onclick="showTab('overview')">Overview</button>
+        <button class="tab-btn" id="tab-btn-settings" onclick="showTab('settings')">Widgets & Alerts</button>
+        <button class="tab-btn" id="tab-btn-profile" onclick="showTab('profile')">Profile & Design</button>
+      </div>
+
+      <!-- ══ Overview ══════════════════════════════════════════════ -->
+      <div class="tab-panel active" id="tab-overview">
+
+        <!-- Setup Checklist -->
+        <div class="section-card" style="margin-bottom:20px">
+          <div class="section-card-header">
+            <div class="section-card-title">Quick Setup Guide</div>
+          </div>
+          <div style="padding:16px 20px; display:flex; flex-direction:column; gap:12px">
+            <div style="display:flex; align-items:center; gap:10px" id="chk-stripe">
+              <span style="color:var(--red); font-weight:bold">✕</span>
+              <span style="font-size:13.5px; color:var(--text-2)">Connect your Stripe Account (Required to receive tips) — <a href="#" onclick="startStripeOnboarding(); return false;" style="color:var(--red); text-decoration:underline">Connect Now</a></span>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px">
+              <span style="color:var(--text-3)">➔</span>
+              <span style="font-size:13.5px; color:var(--text-2)">Customise your alerts & sound in <a href="#" onclick="showTab('settings'); return false;" style="color:var(--red); text-decoration:none; font-weight: 500">Widgets & Alerts</a></span>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px">
+              <span style="color:var(--text-3)">➔</span>
+              <span style="font-size:13.5px; color:var(--text-2)">Copy and paste Alert/Progress URLs into OBS Studio</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px">
+              <span style="color:var(--text-3)">➔</span>
+              <span style="font-size:13.5px; color:var(--text-2)">Share your tip page: <a id="tip-link-chk" href="#" target="_blank" style="color:var(--red); text-decoration:none; font-weight: 500">tip.re-codex.com/[slug]</a></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- OBS Sources -->
+        <div class="section-card" style="margin-bottom:20px">
+          <div class="section-card-header">
+            <div class="section-card-title">OBS Browser Sources</div>
+          </div>
+          <div style="padding: 0 20px">
+            <div class="obs-row">
+              <div>
+                <div class="obs-label">Alert Box</div>
+                <div class="obs-hint">Add as Browser Source · 800 × 600</div>
+              </div>
+              <button class="btn btn-ghost btn-sm" onclick="copyWidgetLink('alert', this)">Copy link</button>
+            </div>
+            <div class="obs-row">
+              <div>
+                <div class="obs-label">Progress Bar</div>
+                <div class="obs-hint">Add as Browser Source · 800 × 200</div>
+              </div>
+              <button class="btn btn-ghost btn-sm" onclick="copyWidgetLink('progress', this)">Copy link</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Preview -->
+        <div class="section-card" style="margin-bottom:20px">
+          <div class="section-card-header">
+            <div class="section-card-title">Widget Preview</div>
+            <div style="display:flex; gap:6px">
+              <button class="btn btn-ghost btn-sm" id="btn-preview-alert" onclick="switchPreviewTab('alert')">Alert</button>
+              <button class="btn btn-primary btn-sm" id="btn-preview-progress" onclick="switchPreviewTab('progress')" style="background:var(--indigo-dim); color:var(--indigo); border-color:#c7d2fe">Progress</button>
+            </div>
+          </div>
+          <div style="padding:16px 20px">
+            <div class="preview-stage">
+              <div class="preview-label">OBS Preview</div>
+              <iframe id="widget-preview-iframe" src="about:blank" style="width:100%; height:100%; border:none"></iframe>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feed -->
+        <div class="section-card">
+          <div class="section-card-header">
+            <div class="section-card-title">Recent Tips</div>
+          </div>
+          <div id="donations-log">
+            <div style="padding:40px; text-align:center; color:var(--text-3)">
+              <span class="spinner spinner-lg" style="color:var(--text-3)"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footnote -->
+        <div style="margin-top:24px; font-size:12.5px; color:var(--text-3); text-align:center; line-height:1.6; padding:10px 0">
+          หมายเหตุ: ค่าธรรมเนียมธุรกรรม PromptPay ผ่าน Stripe คิดอัตรา 1.65% และค่าธรรมเนียมแพลตฟอร์ม TipX คิดอัตรา 0.50% (รวม 2.15%)
+        </div>
+
+      </div>
+
+      <!-- ══ Widgets & Settings ════════════════════════════════════ -->
+      <div class="tab-panel" id="tab-settings">
+        <form id="widget-settings-form">
+
+          <div class="section-card">
+            <div class="section-card-header">
+              <div class="section-card-title">Alert settings</div>
+            </div>
+            <div class="section-card-body">
+              <div class="settings-grid">
+                <div class="form-field">
+                  <label class="label" for="alert-duration">Duration (ms)</label>
+                  <input class="input" type="number" id="alert-duration" min="1000" placeholder="7000">
+                </div>
+                <div class="form-field">
+                  <label class="label" for="alert-min-amount">Min amount to show (฿)</label>
+                  <input class="input" type="number" id="alert-min-amount" min="0" placeholder="0">
+                </div>
+                <div class="form-field span-2">
+                  <label class="label" for="alert-gif">Animation / GIF URL</label>
+                  <input class="input" type="url" id="alert-gif" placeholder="https://media.giphy.com/…">
+                </div>
+                <div class="form-field span-2">
+                  <label class="label" for="alert-sound">Sound URL (MP3/WAV)</label>
+                  <input class="input" type="url" id="alert-sound" placeholder="https://…/sound.mp3">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-card-header">
+              <div class="section-card-title">Text-to-Speech (TTS)</div>
+            </div>
+            <div class="section-card-body">
+              <div class="settings-grid">
+                <div class="form-field span-2" style="display:flex; align-items:center; gap:10px; margin-bottom:16px">
+                  <input type="checkbox" id="alert-tts-enabled">
+                  <label class="label" for="alert-tts-enabled" style="margin:0; cursor:pointer">Enable TTS voice reading</label>
+                </div>
+                <div class="form-field">
+                  <label class="label" for="alert-tts-min-amount">Min amount to speak (฿)</label>
+                  <input class="input" type="number" id="alert-tts-min-amount" min="0" placeholder="0">
+                </div>
+                <div class="form-field">
+                  <label class="label">Volume — <span id="alert-tts-volume-val" style="color:var(--indigo)">100%</span></label>
+                  <input type="range" id="alert-tts-volume" min="0" max="1" step="0.1" value="1" style="margin-top:10px">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-card-header">
+              <div class="section-card-title">Donation goal</div>
+            </div>
+            <div class="section-card-body">
+              <div class="settings-grid">
+                <div class="form-field">
+                  <label class="label" for="goal-label">Goal label</label>
+                  <input class="input" type="text" id="goal-label" placeholder="New stream gear">
+                </div>
+                <div class="form-field">
+                  <label class="label" for="goal-amount">Target amount (฿)</label>
+                  <input class="input" type="number" id="goal-amount" min="0" placeholder="5000">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn btn-primary btn-full" type="submit" id="save-settings-btn">Save settings</button>
+
+        </form>
+      </div>
+
+      <!-- ══ Profile & Design ══════════════════════════════════════ -->
+      <div class="tab-panel" id="tab-profile">
+        <form id="profile-settings-form">
+          <div class="section-card">
+            <div class="section-card-header">
+              <div class="section-card-title">Page appearance</div>
+            </div>
+            <div class="section-card-body">
+              <div class="settings-grid">
+                <div class="form-field">
+                  <label class="label" for="profile-slug">Public @handle</label>
+                  <input class="input" type="text" id="profile-slug" placeholder="your-handle" maxlength="50" required>
+                  <div class="text-xs text-muted" style="margin-top:4px">This changes your tip page URL: tip.re-codex.com/<span id="slug-preview">—</span></div>
+                </div>
+                <div class="form-field span-2">
+                  <label class="label">Avatar Photo</label>
+                  <div class="upload-group">
+                    <img id="avatar-preview" src="/favicon.ico" class="avatar-preview-img" alt="Avatar">
+                    <div class="upload-btn-wrapper">
+                      <button type="button" class="btn btn-ghost btn-sm" id="btn-upload-avatar">Choose image</button>
+                      <input type="file" id="file-avatar" accept="image/*">
+                    </div>
+                    <span id="upload-status-avatar" style="font-size:12px; color:var(--text-3)"></span>
+                  </div>
+                  <div style="margin-top: 10px;">
+                    <label class="label" for="profile-avatar" style="font-size:11px; margin-bottom:4px">Or paste avatar URL</label>
+                    <input class="input" type="url" id="profile-avatar" placeholder="https://i.imgur.com/…">
+                  </div>
+                </div>
+                <div class="form-field">
+                  <label class="label" for="profile-bg-color">Background color</label>
+                  <div class="color-row">
+                    <input class="input" type="text" id="profile-bg-color" placeholder="#f7f8fa">
+                    <input type="color" id="profile-bg-color-picker" value="#f7f8fa">
+                  </div>
+                </div>
+                <div class="form-field">
+                  <label class="label">Background Image</label>
+                  <div class="upload-group">
+                    <img id="bg-preview" src="/favicon.ico" class="bg-preview-img" alt="Background">
+                    <div class="upload-btn-wrapper">
+                      <button type="button" class="btn btn-ghost btn-sm" id="btn-upload-bg">Choose image</button>
+                      <input type="file" id="file-bg" accept="image/*">
+                    </div>
+                    <span id="upload-status-bg" style="font-size:12px; color:var(--text-3)"></span>
+                  </div>
+                  <div style="margin-top: 10px;">
+                    <label class="label" for="profile-bg-image" style="font-size:11px; margin-bottom:4px">Or paste background URL</label>
+                    <input class="input" type="url" id="profile-bg-image" placeholder="https://…">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-full" type="submit" id="save-profile-btn">Save profile</button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js?v=1.1"></script>
+<script src="/js/auth.js?v=1.1"></script>
+<script>
+  async function handleLogout() {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+    } catch (err) {
+      console.error('[Auth] Logout error:', err);
+    } finally {
+      localStorage.removeItem('tipx_user');
+      window.location.href = '/login';
+    }
+  }
+
+  let streamerSlug = '';
+  let alertToken = '';
+  let currentConfig = {};
+  let currentProgressConfig = {};
+  let currentPreviewType = 'alert';
+  let isStreamerExempt = false;
+
+  const pathParts = window.location.pathname.split('/');
+  streamerSlug = pathParts[pathParts.length - 1];
+  document.getElementById('view-page-btn').href = `/${streamerSlug}`;
+
+  function showTab(name) {
+    ['overview','settings','profile'].forEach(n => {
+      document.getElementById(`tab-${n}`).classList.remove('active');
+      document.getElementById(`tab-btn-${n}`).classList.remove('active');
+      document.getElementById(`nav-${n}`).classList.remove('active');
+    });
+    document.getElementById(`tab-${name}`).classList.add('active');
+    document.getElementById(`tab-btn-${name}`).classList.add('active');
+    document.getElementById(`nav-${name}`).classList.add('active');
+    const titles = { overview: 'Overview', settings: 'Widgets & Alerts', profile: 'Profile & Design' };
+    document.getElementById('topbar-title').textContent = titles[name] || name;
+  }
+
+  window.addEventListener('DOMContentLoaded', async () => {
+    const user = await requireAuth();
+    if (user.role !== 'admin' && user.slug !== streamerSlug) {
+      showToast('Access denied.', 'error');
+      window.location.href = `/dashboard/${user.slug}`;
+      return;
+    }
+    document.body.style.display = 'block';
+    await loadDashboardData();
+    await loadDonationsLog();
+  });
+
+  async function loadDashboardData() {
+    try {
+      const data = await apiFetch(`/dashboard/${streamerSlug}`);
+      const db = data.dashboard;
+      document.getElementById('streamer-username').textContent = db.username;
+      alertToken = db.alert_token;
+
+      // Set streamer exemption state
+      isStreamerExempt = db.role === 'admin' || db.slug === 'al' || db.username === 'al';
+
+      // Update checklist status dynamically
+      const chkStripe = document.getElementById('chk-stripe');
+      if (db.stripe_onboarding_done) {
+        chkStripe.innerHTML = `
+          <span style="color:var(--green); font-weight:bold; font-size:15px">✓</span>
+          <span style="font-size:13.5px; color:var(--text-2)">Stripe Account Connected! (Ready to accept payments) — <a href="#" onclick="unlinkStripe(); return false;" style="color:var(--red); text-decoration:underline; font-weight:500; margin-left:5px">Unlink Stripe</a></span>
+        `;
+      } else {
+        chkStripe.innerHTML = `
+          <span style="color:var(--red); font-weight:bold; font-size:14px">✕</span>
+          <span style="font-size:13.5px; color:var(--text-2)">Connect your Stripe Account (Required to receive tips) — <a href="#" onclick="startStripeOnboarding(); return false;" style="color:var(--red); text-decoration:underline">Connect Now</a></span>
+        `;
+      }
+      const chkLink = document.getElementById('tip-link-chk');
+      chkLink.href = `/${db.slug}`;
+      chkLink.textContent = `${window.location.origin}/${db.slug}`;
+
+      document.getElementById('stripe-onboarding-banner').style.display =
+        db.stripe_onboarding_done ? 'none' : 'flex';
+      currentConfig = db.alert_config || {};
+      currentProgressConfig = db.progress_config || {};
+      document.getElementById('alert-duration').value = currentConfig.duration_ms || 7000;
+      document.getElementById('alert-gif').value = currentConfig.gif_url || '';
+      document.getElementById('alert-sound').value = currentConfig.sound_url || '';
+      document.getElementById('alert-min-amount').value = (currentConfig.min_amount_to_show || 0) / 100;
+      document.getElementById('alert-tts-enabled').checked = currentConfig.tts_enabled !== false;
+      document.getElementById('alert-tts-min-amount').value = (currentConfig.tts_min_amount || 0) / 100;
+      const vol = currentConfig.tts_volume !== undefined ? parseFloat(currentConfig.tts_volume) : 1.0;
+      document.getElementById('alert-tts-volume').value = vol;
+      document.getElementById('alert-tts-volume-val').textContent = Math.round(vol * 100) + '%';
+      document.getElementById('goal-label').value = currentProgressConfig.goal_label || '';
+      document.getElementById('goal-amount').value = db.goal_amount / 100;
+      document.getElementById('profile-slug').value = db.slug || '';
+      document.getElementById('slug-preview').textContent = db.slug || '—';
+      document.getElementById('profile-avatar').value = db.avatar_url || '';
+      document.getElementById('avatar-preview').src = db.avatar_url || '/favicon.ico';
+      document.getElementById('profile-bg-color').value = db.bg_color || '#f7f8fa';
+      document.getElementById('profile-bg-color-picker').value = db.bg_color || '#f7f8fa';
+      document.getElementById('profile-bg-image').value = db.bg_image_url || '';
+      document.getElementById('bg-preview').src = db.bg_image_url || '/favicon.ico';
+      switchPreviewTab(currentPreviewType);
+    } catch (err) { showToast(err.message, 'error'); }
+  }
+
+  function escapeHTML(str) {
+    if (!str) return '';
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  async function loadDonationsLog() {
+    const feed = document.getElementById('donations-log');
+    try {
+      const data = await apiFetch(`/dashboard/${streamerSlug}/donations?limit=50`);
+      if (!data.donations.length) {
+        feed.innerHTML = '<div style="padding:40px; text-align:center; color:var(--text-3); font-size:14px">No tips received yet.</div>';
+        return;
+      }
+      let html = '';
+      data.donations.forEach(d => {
+        const badge = '<span class="badge badge-green">Paid</span>';
+        const replay = `<button class="btn btn-ghost btn-sm" onclick="replayAlert(${d.id})">
+               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+               Replay
+             </button>` : '';
+        const escapedName = escapeHTML(d.donor_name);
+        const msg = (d.message && d.message.trim()) ? `<div class="feed-msg">${escapeHTML(d.message.trim())}</div>` : '';
+        let feeInfo = '';
+        if (!isStreamerExempt && d.status === 'succeeded') {
+          const totalFees = (d.platform_fee || 0) + (d.stripe_fee_estimated || 0);
+          const feePercent = d.amount > 0 ? ((totalFees / d.amount) * 100).toFixed(2) : '0.00';
+          feeInfo = `<div style="font-size:11px; color:var(--text-3); text-align:right; margin-top:2px">หักค่าธรรมเนียม ${feePercent}%</div>`;
+        }
+        html += `
+          <div class="feed-row">
+            <div style="flex:1">
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:2px">
+                <span class="feed-donor">${escapedName}</span>
+                ${badge}
+              </div>
+              <span class="feed-time">${timeAgo(d.created_at)}</span>
+              ${msg}
+            </div>
+            <div class="feed-right">
+              <span class="feed-amount">${formatAmount(d.amount)}</span>
+              ${feeInfo}
+              ${replay}
+            </div>
+          </div>`;
+      });
+      feed.innerHTML = html;
+    } catch (err) {
+      feed.innerHTML = '<div style="padding:40px; text-align:center; color:var(--red); font-size:14px">Failed to load.</div>';
+    }
+  }
+
+  async function startStripeOnboarding() {
+    const btn = document.getElementById('onboard-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner" style="color:var(--red)"></span>';
+    try {
+      const res = await apiFetch(`/dashboard/${streamerSlug}/stripe/onboard`);
+      if (res.already_connected) {
+        showToast(res.message || 'Stripe account is already connected.', 'success');
+        btn.disabled = false;
+        btn.innerHTML = 'Connect';
+        await loadDashboardData();
+        return;
+      }
+      window.location.href = res.url;
+    } catch (err) {
+      showToast(err.message, 'error');
+      btn.disabled = false;
+      btn.innerHTML = 'Connect';
+    }
+  }
+
+  async function unlinkStripe() {
+    if (!confirm('ยืนยันที่จะยกเลิกการเชื่อมโยงบัญชี Stripe หรือไม่? ผู้สนับสนุนจะไม่สามารถส่งเงินโดเนทให้คุณได้จนกว่าคุณจะเชื่อมต่อใหม่อีกครั้ง')) {
+      return;
+    }
+    try {
+      const res = await apiFetch(`/dashboard/${streamerSlug}/stripe/unlink`, {
+        method: 'POST'
+      });
+      showToast(res.message, 'success');
+      await loadDashboardData();
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  document.getElementById('widget-settings-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('save-settings-btn');
+    btn.disabled = true;
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner" style="color:white"></span>';
+    try {
+      await apiFetch(`/dashboard/${streamerSlug}/widget`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          alert_config: {
+            duration_ms: parseInt(document.getElementById('alert-duration').value) || 7000,
+            gif_url: document.getElementById('alert-gif').value,
+            sound_url: document.getElementById('alert-sound').value,
+            min_amount_to_show: Math.round((parseFloat(document.getElementById('alert-min-amount').value)||0)*100),
+            tts_enabled: document.getElementById('alert-tts-enabled').checked,
+            tts_min_amount: Math.round((parseFloat(document.getElementById('alert-tts-min-amount').value)||0)*100),
+            tts_volume: parseFloat(document.getElementById('alert-tts-volume').value),
+            font_family: currentConfig.font_family || 'Inter',
+            font_size: currentConfig.font_size || 32,
+            text_color: currentConfig.text_color || '#FFFFFF',
+            bg_color: currentConfig.bg_color || 'transparent'
+          },
+          progress_config: {
+            goal_label: document.getElementById('goal-label').value || 'Goal',
+            bar_color: currentProgressConfig.bar_color || '#6366f1',
+            text_color: currentProgressConfig.text_color || '#FFFFFF',
+            bg_color: currentProgressConfig.bg_color || '#ffffff'
+          },
+          goal_amount: Math.round((parseFloat(document.getElementById('goal-amount').value)||0)*100)
+        })
+      });
+      showToast('Settings saved.', 'success');
+      await loadDashboardData();
+    } catch (err) { showToast(err.message, 'error'); }
+    finally { btn.disabled = false; btn.innerHTML = orig; }
+  });
+
+  document.getElementById('profile-settings-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('save-profile-btn');
+    btn.disabled = true;
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner" style="color:white"></span>';
+    try {
+      const newSlug = document.getElementById('profile-slug').value.trim();
+      await apiFetch(`/dashboard/${streamerSlug}/profile`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          slug: newSlug || undefined,
+          avatar_url: document.getElementById('profile-avatar').value,
+          bg_color: document.getElementById('profile-bg-color').value,
+          bg_image_url: document.getElementById('profile-bg-image').value
+        })
+      });
+      showToast('Profile updated.', 'success');
+      if (newSlug && newSlug !== streamerSlug) {
+        setTimeout(() => { window.location.href = `/dashboard/${newSlug}`; }, 800);
+        return;
+      }
+    } catch (err) { showToast(err.message, 'error'); }
+    finally { btn.disabled = false; btn.innerHTML = orig; }
+  });
+
+  async function replayAlert(id) {
+    try {
+      await apiFetch(`/dashboard/${streamerSlug}/donations/${id}/replay`, { method: 'POST' });
+      showToast('Replay triggered.', 'success');
+    } catch (err) { showToast(err.message, 'error'); }
+  }
+
+  function copyWidgetLink(type, btn) {
+    if (!alertToken) { showToast('Token missing. Refresh.', 'error'); return; }
+    navigator.clipboard.writeText(`${window.location.origin}/widget/${type}?token=${alertToken}`).then(() => {
+      showToast(`${type === 'alert' ? 'Alert' : 'Progress'} link copied!`, 'success');
+      const orig = btn.textContent;
+      btn.textContent = 'Copied!';
+      btn.disabled = true;
+      setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 1500);
+    });
+  }
+
+  function switchPreviewTab(type) {
+    if (!alertToken) return;
+    currentPreviewType = type;
+    document.getElementById('widget-preview-iframe').src = `/widget/${type}?token=${alertToken}`;
+  }
+
+  document.getElementById('alert-tts-volume').addEventListener('input', function() {
+    document.getElementById('alert-tts-volume-val').textContent = Math.round(this.value * 100) + '%';
+  });
+
+  const bgColorInput  = document.getElementById('profile-bg-color');
+  const bgColorPicker = document.getElementById('profile-bg-color-picker');
+  bgColorPicker.addEventListener('input', () => { bgColorInput.value = bgColorPicker.value.toUpperCase(); });
+  bgColorInput.addEventListener('input', () => {
+    if (/^#[0-9A-F]{6}$/i.test(bgColorInput.value)) bgColorPicker.value = bgColorInput.value;
+  });
+
+  document.getElementById('profile-slug').addEventListener('input', function() {
+    const cleaned = this.value.toLowerCase().replace(/[^a-z0-9_-]/g, '');
+    this.value = cleaned;
+    document.getElementById('slug-preview').textContent = cleaned || '—';
+  });
+
+  // Client-side image compression using Canvas API
+  function compressImage(file, maxWidth, maxHeight, quality = 0.85) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob((blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error('Canvas compression failed.'));
+            }
+          }, 'image/webp', quality);
+        };
+        img.onerror = (err) => reject(err);
+      };
+      reader.onerror = (err) => reject(err);
+    });
+  }
+
+  // Handle uploading and compression
+  async function handleFileUpload(fileInputId, type, previewImgId, statusSpanId, textInputId, maxWidth, maxHeight) {
+    const fileInput = document.getElementById(fileInputId);
+    const statusSpan = document.getElementById(statusSpanId);
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    statusSpan.textContent = 'Compressing...';
+    try {
+      const compressedBlob = await compressImage(file, maxWidth, maxHeight, 0.85);
+      statusSpan.textContent = 'Uploading...';
+
+      const formData = new FormData();
+      formData.append('image', compressedBlob, 'upload.webp');
+
+      const res = await apiFetch(`/dashboard/${streamerSlug}/upload?type=${type}`, {
+        method: 'POST',
+        body: formData
+      });
+
+      document.getElementById(textInputId).value = res.url;
+      document.getElementById(previewImgId).src = res.url;
+      statusSpan.textContent = 'Done!';
+      showToast('Uploaded successfully!', 'success');
+    } catch (err) {
+      console.error(err);
+      statusSpan.textContent = 'Failed';
+      showToast(err.message || 'Upload failed.', 'error');
+    }
+  }
+
+  document.getElementById('file-avatar').addEventListener('change', () => {
+    handleFileUpload('file-avatar', 'avatar', 'avatar-preview', 'upload-status-avatar', 'profile-avatar', 500, 500);
+  });
+
+  document.getElementById('file-bg').addEventListener('change', () => {
+    handleFileUpload('file-bg', 'background', 'bg-preview', 'upload-status-bg', 'profile-bg-image', 1920, 1080);
+  });
+
+  // Dynamic preview for URL fallbacks
+  document.getElementById('profile-avatar').addEventListener('input', (e) => {
+    document.getElementById('avatar-preview').src = e.target.value || '/favicon.ico';
+  });
+  document.getElementById('profile-bg-image').addEventListener('input', (e) => {
+    document.getElementById('bg-preview').src = e.target.value || '/favicon.ico';
+  });
+</script>
+</body>
+</html>
