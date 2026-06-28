@@ -422,7 +422,7 @@
             <div class="section-card-title">Widget Preview</div>
             <div style="display:flex; gap:6px">
               <button class="btn btn-ghost btn-sm" id="btn-preview-alert" onclick="switchPreviewTab('alert')">Alert</button>
-              <button class="btn btn-primary btn-sm" id="btn-preview-progress" onclick="switchPreviewTab('progress')" style="background:var(--indigo-dim); color:var(--indigo); border-color:#c7d2fe">Progress</button>
+              <button class="btn btn-ghost btn-sm" id="btn-preview-progress" onclick="switchPreviewTab('progress')">Progress</button>
             </div>
           </div>
           <div style="padding:16px 20px">
@@ -907,6 +907,21 @@
     if (!alertToken) return;
     currentPreviewType = type;
     document.getElementById('widget-preview-iframe').src = `/widget/${type}?token=${alertToken}`;
+
+    const alertBtn = document.getElementById('btn-preview-alert');
+    const progressBtn = document.getElementById('btn-preview-progress');
+    const activeStyle = 'background:var(--indigo-dim); color:var(--indigo); border-color:#c7d2fe';
+    if (type === 'alert') {
+      alertBtn.setAttribute('style', activeStyle);
+      alertBtn.className = 'btn btn-primary btn-sm';
+      progressBtn.setAttribute('style', '');
+      progressBtn.className = 'btn btn-ghost btn-sm';
+    } else {
+      progressBtn.setAttribute('style', activeStyle);
+      progressBtn.className = 'btn btn-primary btn-sm';
+      alertBtn.setAttribute('style', '');
+      alertBtn.className = 'btn btn-ghost btn-sm';
+    }
   }
 
   document.getElementById('alert-tts-volume').addEventListener('input', function() {
