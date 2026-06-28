@@ -917,7 +917,7 @@
         const isMobile = window.innerWidth < 768;
         // Radial vignette: lighter center, darker edges — draws focus to content
         Object.assign(document.body.style, {
-          background: `radial-gradient(ellipse 60% 50% at 50% 40%, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.25) 70%, rgba(0,0,0,0.5) 100%), url(${s.bg_image_url}) ${bgX}% ${bgY}%/cover no-repeat ${isMobile ? 'scroll' : 'fixed'}`,
+          background: `linear-gradient(to bottom, rgba(0,0,0,0.05), rgba(0,0,0,0.4)), url(${s.bg_image_url}) ${bgX}% ${bgY}%/cover no-repeat ${isMobile ? 'scroll' : 'fixed'}`,
           backgroundSize: 'cover',
         });
         document.body.classList.add('theme-glass');
