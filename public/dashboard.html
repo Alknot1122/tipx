@@ -368,6 +368,22 @@
       <!-- ══ Overview ══════════════════════════════════════════════ -->
       <div class="tab-panel active" id="tab-overview">
 
+        <!-- Public Page Toggle -->
+        <div class="section-card" style="margin-bottom:20px">
+          <div class="section-card-header">
+            <div class="section-card-title">Public Tip Page</div>
+          </div>
+          <div style="padding:16px 20px; display:flex; align-items:center; justify-content:space-between">
+            <div>
+              <div style="font-size:14px; font-weight:500" id="toggle-status-text">Loading…</div>
+              <div style="font-size:12px; color:var(--text-3); margin-top:2px">Turn on to allow visitors to send you tips</div>
+            </div>
+            <button id="toggle-active-btn" class="btn btn-primary btn-sm" onclick="toggleActiveSelf()" style="min-width:90px">
+              Toggle
+            </button>
+          </div>
+        </div>
+
         <!-- Setup Checklist -->
         <div class="section-card" style="margin-bottom:20px">
           <div class="section-card-header">
@@ -661,6 +677,9 @@
       document.getElementById('streamer-username').textContent = db.username;
       alertToken = db.alert_token;
 
+      // Toggle state
+      updateToggleUI(db.is_active !== false);
+
       // Set streamer exemption state
       isStreamerExempt = db.role === 'admin' || db.slug === 'al' || db.username === 'al';
 
@@ -895,6 +914,31 @@
       await apiFetch(`/dashboard/${streamerSlug}/donations/test-alert`, { method: 'POST' });
       showToast('Test alert sent! Check OBS.', 'success');
     } catch (err) { showToast(err.message, 'error'); }
+  }
+
+  async function toggleActiveSelf() {
+    try {
+      const res = await apiFetch(`/dashboard/${streamerSlug}/toggle-active`, { method: 'POST' });
+      const isActive = res.user.is_active;
+      updateToggleUI(isActive);
+      showToast(isActive ? 'Tip page is now online.' : 'Tip page is now offline.', 'success');
+    } catch (err) { showToast(err.message, 'error'); }
+  }
+
+  function updateToggleUI(isActive) {
+    const btn = document.getElementById('toggle-active-btn');
+    const txt = document.getElementById('toggle-status-text');
+    if (isActive) {
+      btn.textContent = 'Online';
+      btn.className = 'btn btn-success btn-sm';
+      btn.style.minWidth = '90px';
+      txt.innerHTML = '🟢 <strong>Online</strong> — accepting tips';
+    } else {
+      btn.textContent = 'Offline';
+      btn.className = 'btn btn-danger-ghost btn-sm';
+      btn.style.minWidth = '90px';
+      txt.innerHTML = '🔴 <strong>Offline</strong> — tip page hidden';
+    }
   }
 
   function copyWidgetLink(type, btn) {

@@ -13,7 +13,7 @@ const getDashboard = async (req, res) => {
 
   try {
     const { rows: userRows } = await query(
-      `SELECT u.id, u.role, u.username, u.slug, u.email,
+      `SELECT u.id, u.role, u.username, u.slug, u.email, u.is_active,
               u.stripe_account_id, u.stripe_onboarding_done,
               u.avatar_url, u.bg_color, u.bg_image_url,
               ws.alert_token, ws.alert_config, ws.progress_config,
@@ -45,7 +45,7 @@ const getDashboard = async (req, res) => {
       
       // Fetch again with the newly created widget settings
       const { rows: updatedRows } = await query(
-        `SELECT u.id, u.role, u.username, u.slug, u.email,
+        `SELECT u.id, u.role, u.username, u.slug, u.email, u.is_active,
                 u.stripe_account_id, u.stripe_onboarding_done,
                 u.avatar_url, u.bg_color, u.bg_image_url,
                 ws.alert_token, ws.alert_config, ws.progress_config,
@@ -108,7 +108,24 @@ const getDonations = async (req, res) => {
   }
 };
 
-// ── POST /dashboard/:slug/donations/test-alert ────────────────────────────────
+// ── POST /dashboard/:slug/toggle-active ────────────────────────────────────────
+const toggleSelfActive = async (req, res) => {
+  const { slug } = req.params;
+
+  try {
+    const { rows } = await query(
+      `UPDATE users SET is_active = NOT is_active
+       WHERE slug = $1 AND (role = 'streamer' OR role = 'admin')
+       RETURNING id, username, slug, is_active`,
+      [slug]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Not found.' });
+    return res.json({ user: rows[0] });
+  } catch (err) {
+    console.error('[Streamer] toggleSelfActive error:', err.message);
+    return res.status(500).json({ error: 'Internal server error.' });
+  }
+};
 const testAlert = async (req, res) => {
   const { slug } = req.params;
 
@@ -448,6 +465,7 @@ module.exports = {
   replayDonation,
   deleteDonation,
   testAlert,
+  toggleSelfActive,
   updateWidgetSettings,
   getStripeOnboardingLink,
   updateProfile,
