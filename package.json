@@ -1,7 +1,7 @@
 {
   "name": "tipx",
   "version": "1.0.0",
-  "description": "TipX — Self-hosted streaming donation platform for tip.re-codex.com",
+  "description": "TipX — Self-hosted streaming tip platform for tip.re-codex.com",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
@@ -11,7 +11,7 @@
   },
   "keywords": [
     "tipx",
-    "donations",
+    "tips",
     "stripe",
     "streaming"
   ],

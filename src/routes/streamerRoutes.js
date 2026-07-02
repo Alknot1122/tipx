@@ -3,9 +3,9 @@ const router = express.Router();
 const { requireAuth, requireSelf } = require('../middleware/auth');
 const {
   getDashboard,
-  getDonations,
-  replayDonation,
-  deleteDonation,
+  getTips,
+  replayTip,
+  deleteTip,
   testAlert,
   toggleSelfActive,
   updateWidgetSettings,
@@ -18,11 +18,11 @@ const {
 router.use('/:slug', requireAuth, requireSelf);
 
 router.get('/:slug',                          getDashboard);
-router.get('/:slug/donations',                getDonations);
-router.post('/:slug/donations/test-alert',     testAlert);
+router.get('/:slug/tips',                getTips);
+router.post('/:slug/tips/test-alert',     testAlert);
 router.post('/:slug/toggle-active',              toggleSelfActive);
-router.post('/:slug/donations/:id/replay',    replayDonation);
-router.delete('/:slug/donations/:id',           deleteDonation);
+router.post('/:slug/tips/:id/replay',    replayTip);
+router.delete('/:slug/tips/:id',           deleteTip);
 router.put('/:slug/widget',                   updateWidgetSettings);
 router.get('/:slug/stripe/onboard',           getStripeOnboardingLink);
 router.post('/:slug/stripe/unlink',          unlinkStripe);

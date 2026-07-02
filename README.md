@@ -1,8 +1,8 @@
-# TipX — Self-Hosted Streaming Donation Platform
+# TipX — Self-Hosted Streaming Tip Platform
 
 > **Domain:** `tip.re-codex.com` | Built with Node.js, Express, PostgreSQL, Stripe Connect, and Socket.io.
 
-TipX is a fully self-hosted, non-custodial donation platform for streamers. It uses **Stripe Connect** to route donations directly to streamers' bank accounts, charges a minimal platform fee, and provides native OBS widget integration — completely replacing Streamlabs.
+TipX is a fully self-hosted, non-custodial tip platform for streamers. It uses **Stripe Connect** to route tips directly to streamers' bank accounts, charges a minimal platform fee, and provides native OBS widget integration — completely replacing Streamlabs.
 
 ---
 
@@ -26,7 +26,7 @@ TipX is a fully self-hosted, non-custodial donation platform for streamers. It u
 
 ```
 tip.re-codex.com/               → 302 Redirect → re-codex.com
-tip.re-codex.com/:slug          → Public donation page (no login)
+tip.re-codex.com/:slug          → Public tip page (no login)
 tip.re-codex.com/dashboard/:slug → Streamer private dashboard (JWT auth)
 tip.re-codex.com/dashboard      → Admin master dashboard (admin only)
 
@@ -38,7 +38,7 @@ tip.re-codex.com/public/widget/progress?token=XYZ → OBS Progress Bar
 ```
 Donor pays → Stripe → payment_intent.succeeded webhook → TipX backend
                                                               ↓
-                                           PostgreSQL (donation logged)
+                                           PostgreSQL (tip logged)
                                                               ↓
                                         Socket.io /widget namespace
                                                               ↓
@@ -66,7 +66,7 @@ tipx/
     ├── controllers/
     │   ├── authController.js         # Login / Refresh / Logout
     │   ├── adminController.js        # Provision streamers, master list
-    │   ├── streamerController.js     # Dashboard, donations, widget config
+    │   ├── streamerController.js     # Dashboard, tips, widget config
     │   ├── publicController.js       # Public page + Payment Intent
     │   └── webhookController.js      # Stripe webhook handler
     ├── routes/
@@ -151,7 +151,7 @@ psql $DATABASE_URL -f schema.sql
 ### Admin — `/admin` *(Admin role required)*
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/admin/streamers` | List all streamers with donation stats |
+| `GET` | `/admin/streamers` | List all streamers with tip stats |
 | `POST` | `/admin/streamers` | Provision a new streamer account |
 | `PATCH` | `/admin/streamers/:id/toggle` | Enable/disable a streamer |
 
@@ -159,8 +159,8 @@ psql $DATABASE_URL -f schema.sql
 | Method | Path | Description |
 |---|---|---|
 | `GET` | `/dashboard/:slug` | Dashboard data + widget settings |
-| `GET` | `/dashboard/:slug/donations` | Paginated donation history |
-| `POST` | `/dashboard/:slug/donations/:id/replay` | Re-trigger an alert in OBS |
+| `GET` | `/dashboard/:slug/tips` | Paginated tip history |
+| `POST` | `/dashboard/:slug/tips/:id/replay` | Re-trigger an alert in OBS |
 | `PUT` | `/dashboard/:slug/widget` | Update alert/progress bar config |
 | `GET` | `/dashboard/:slug/stripe/onboard` | Get Stripe onboarding URL |
 
@@ -189,7 +189,7 @@ psql $DATABASE_URL -f schema.sql
 4. Set Width: `800`, Height: `200` (alert box) or `100` (progress bar).
 5. Enable **"Shutdown source when not visible"** and **"Refresh when scene becomes active"**.
 
-Widgets authenticate automatically via the token and maintain a persistent WebSocket connection. When a donation succeeds, OBS shows the alert within **~100ms**.
+Widgets authenticate automatically via the token and maintain a persistent WebSocket connection. When a tip succeeds, OBS shows the alert within **~100ms**.
 
 ---
 
@@ -237,7 +237,7 @@ stripe trigger payment_intent.succeeded
 ```
 
 **Events handled:**
-- `payment_intent.succeeded` → Log donation, update progress bar, broadcast WebSocket alert
+- `payment_intent.succeeded` → Log tip, update progress bar, broadcast WebSocket alert
 - `account.updated` → Auto-confirm Stripe Connect onboarding completion
 
 ---

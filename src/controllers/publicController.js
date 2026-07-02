@@ -51,15 +51,15 @@ const STRIPE_FEE_RATE   = 0.0165;  // 1.65% (estimation for display/logging)
 
 const createPaymentIntent = async (req, res) => {
   const { slug } = req.params;
-  const { amount, donor_name, message, donor_email } = req.body;
+  const { amount, tipper_name, message, tipper_email } = req.body;
 
   // Validate amount (minimum 2000 satang = 20 THB)
   const amountInt = parseInt(amount);
   if (!amountInt || amountInt < 2000) {
-    return res.status(400).json({ error: 'Minimum donation amount is 20 THB (2000 satang).' });
+    return res.status(400).json({ error: 'Minimum tip amount is 20 THB (2000 satang).' });
   }
   if (amountInt > 100000000) {
-    return res.status(400).json({ error: 'Donation amount too large.' });
+    return res.status(400).json({ error: 'Tip amount too large.' });
   }
 
   try {
@@ -84,9 +84,9 @@ const createPaymentIntent = async (req, res) => {
     const stripeFeeEst = Math.ceil(amountInt * STRIPE_FEE_RATE);
     const netToStreamer = amountInt - platformFee - stripeFeeEst;
 
-    // Sanitize donor inputs — strip control/zero-width characters
-    const safeDonorName = (donor_name || 'Anonymous').replace(/[\x00-\x1f\x7f\u200b-\u200f\u2028-\u202f\ufeff]/g, '').slice(0, 50);
-    const safeMessage   = (message || '').replace(/[\x00-\x1f\x7f\u200b-\u200f\u2028-\u202f\ufeff]/g, '').slice(0, 255);
+    // Sanitize tipper inputs — strip control/zero-width characters
+    const safeTipperName = (tipper_name || 'Anonymous').replace(/[\x00-\x1f\x7f\u200b-\u200f\u2028-\u202f\ufeff]/g, '').slice(0, 50);
+    const safeMessage    = (message || '').replace(/[\x00-\x1f\x7f\u200b-\u200f\u2028-\u202f\ufeff]/g, '').slice(0, 255);
 
     // Create PaymentIntent parameters
     const paymentIntentParams = {
@@ -94,11 +94,12 @@ const createPaymentIntent = async (req, res) => {
       currency: 'thb',
       payment_method_types: ['promptpay'],
       metadata: {
-        streamer_slug:   slug,
-        streamer_id:     String(streamer.id),
-        donor_name:      safeDonorName,
-        message:         safeMessage,
-        donor_email:     donor_email || '',
+        streamer_slug:     slug,
+        streamer_id:       String(streamer.id),
+        streamer_username: streamer.username,
+        tipper_name:       safeTipperName,
+        message:           safeMessage,
+        tipper_email:      tipper_email || '',
       },
     };
 
@@ -136,7 +137,7 @@ const createPaymentIntent = async (req, res) => {
 };
 
 // ── POST /public/payment-intent/cancel ────────────────────────────────────────
-// Cancel the pending Stripe PaymentIntent and clean up any pending donation row
+// Cancel the pending Stripe PaymentIntent and clean up any pending tip row
 const cancelPaymentIntent = async (req, res) => {
   const { payment_intent_id } = req.body;
   if (!payment_intent_id) {
@@ -144,10 +145,10 @@ const cancelPaymentIntent = async (req, res) => {
   }
 
   try {
-    // 1. Try to find and remove any pending donation row for this PaymentIntent
-    const { rows: donations } = await query(
+    // 1. Try to find and remove any pending tip row for this PaymentIntent
+    const { rows: tips } = await query(
       `SELECT d.id, d.status, u.stripe_account_id
-       FROM donations d
+       FROM tips d
        JOIN users u ON u.id = d.streamer_id
        WHERE d.stripe_payment_intent = $1`,
       [payment_intent_id]
@@ -155,12 +156,12 @@ const cancelPaymentIntent = async (req, res) => {
 
     let stripeAccountId = null;
 
-    if (donations.length) {
-      const donation = donations[0];
-      stripeAccountId = donation.stripe_account_id;
+    if (tips.length) {
+      const tip = tips[0];
+      stripeAccountId = tip.stripe_account_id;
       // Only delete if still pending
-      if (donation.status === 'pending') {
-        await query(`DELETE FROM donations WHERE id = $1`, [donation.id]);
+      if (tip.status === 'pending') {
+        await query(`DELETE FROM tips WHERE id = $1`, [tip.id]);
       }
     }
 

@@ -160,9 +160,9 @@ const generateAlertBoxHTML = (token, config) => {
     socket.on('connect', () => console.log('[TipX Alert] Connected'));
     socket.on('disconnect', () => console.log('[TipX Alert] Disconnected'));
 
-    socket.on('donation:alert', (data) => {
-      const donation = data.donation;
-      if (donation.amount < CONFIG.min_amount_to_show) return;
+    socket.on('tip:alert', (data) => {
+      const tip = data.tip;
+      if (tip.amount < CONFIG.min_amount_to_show) return;
       queue.push(data);
       if (!showing) processQueue();
     });
@@ -175,13 +175,13 @@ const generateAlertBoxHTML = (token, config) => {
     }
 
     function showAlert(data) {
-      const donation = data.donation;
+      const tip = data.tip;
       const cfg = data.alert_config || CONFIG;
-      const amountDisplay = (donation.amount / 100).toLocaleString('th-TH', { style: 'currency', currency: donation.currency });
+      const amountDisplay = (tip.amount / 100).toLocaleString('th-TH', { style: 'currency', currency: tip.currency });
 
-      text.textContent = \`\${donation.donor_name} donated \${amountDisplay}!\`;
-      if (donation.message && donation.message.trim()) {
-        msg.textContent = donation.message.trim();
+      text.textContent = \`\${tip.tipper_name} tipped \${amountDisplay}!\`;
+      if (tip.message && tip.message.trim()) {
+        msg.textContent = tip.message.trim();
         msg.style.display = 'block';
       } else {
         msg.textContent = '';
@@ -201,12 +201,12 @@ const generateAlertBoxHTML = (token, config) => {
       }
 
       // Free, Unlimited Built-in Browser TTS (SpeechSynthesis)
-      if (cfg.tts_enabled && donation.amount >= (cfg.tts_min_amount || 0)) {
+      if (cfg.tts_enabled && tip.amount >= (cfg.tts_min_amount || 0)) {
         setTimeout(() => {
-          const rawAmount = (donation.amount / 100).toFixed(0);
-          let speakText = \`\${donation.donor_name} โดเนท \${rawAmount} บาท. \`;
-          if (donation.message && donation.message.trim()) {
-            speakText += \`ข้อความ. \${donation.message.trim()}\`;
+          const rawAmount = (tip.amount / 100).toFixed(0);
+          let speakText = \`\${tip.tipper_name} โดเนท \${rawAmount} บาท. \`;
+          if (tip.message && tip.message.trim()) {
+            speakText += \`ข้อความ. \${tip.message.trim()}\`;
           }
           
           const utterance = new SpeechSynthesisUtterance(speakText);
@@ -243,7 +243,7 @@ const generateAlertBoxHTML = (token, config) => {
 
 const generateProgressBarHTML = (token, config, goalAmount, goalCurrent) => {
   const cfg = {
-    goal_label: 'Donation Goal',
+    goal_label: 'Tip Goal',
     bar_color: '#7C3AED',
     text_color: '#FFFFFF',
     bg_color: '#1a1a2e',
@@ -305,7 +305,7 @@ const generateProgressBarHTML = (token, config, goalAmount, goalCurrent) => {
     let current = ${goalCurrent};
     let goal    = ${goalAmount};
 
-    socket.on('donation:alert', (data) => {
+    socket.on('tip:alert', (data) => {
       if (!data.progress) return;
       current = data.progress.goal_current;
       goal    = data.progress.goal_amount;

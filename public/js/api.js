@@ -83,7 +83,7 @@ async function refreshAccessToken() {
 function handleAuthFailure() {
   localStorage.removeItem('tipx_user');
   // Avoid infinite redirect loops if we are already on the login page
-  if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/donate') && window.location.pathname !== '/') {
+  if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/tip') && window.location.pathname !== '/') {
     window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
   }
 }

@@ -3,7 +3,7 @@ const { query } = require('../config/db');
 /**
  * Perform database cleanup operations:
  * 1. Delete expired refresh tokens.
- * 2. Delete stale pending donations (older than 24 hours).
+ * 2. Delete stale pending tips (older than 24 hours).
  */
 const runMaintenance = async () => {
   const startTime = Date.now();
@@ -18,13 +18,13 @@ const runMaintenance = async () => {
       console.log(`[DB Maintenance] Deleted ${tokenRes.rowCount} expired refresh tokens.`);
     }
 
-    // 2. Clean up stale pending donations older than 24 hours
+    // 2. Clean up stale pending tips older than 24 hours
     // (Stripe PromptPay intents expire in 1 hour or less; 24 hours is extremely safe)
-    const donationRes = await query(
-      `DELETE FROM donations WHERE status = 'pending' AND created_at < NOW() - INTERVAL '24 hours'`
+    const tipRes = await query(
+      `DELETE FROM tips WHERE status = 'pending' AND created_at < NOW() - INTERVAL '24 hours'`
     );
-    if (donationRes.rowCount > 0) {
-      console.log(`[DB Maintenance] Deleted ${donationRes.rowCount} stale pending donations.`);
+    if (tipRes.rowCount > 0) {
+      console.log(`[DB Maintenance] Deleted ${tipRes.rowCount} stale pending tips.`);
     }
 
     const duration = Date.now() - startTime;

@@ -743,11 +743,11 @@
       <div class="sep"></div>
 
       <div class="field">
-        <input type="text" id="donor-name" placeholder="Your display name (optional)" maxlength="50">
+        <input type="text" id="tipper-name" placeholder="Your display name (optional)" maxlength="50">
       </div>
 
       <div class="field">
-        <input type="email" id="donor-email" placeholder="Email for receipt (optional)">
+        <input type="email" id="tipper-email" placeholder="Your email (optional)">
       </div>
 
       <div class="field">
@@ -886,8 +886,8 @@
 
         // Disable input fields
         document.getElementById('amount').disabled = true;
-        document.getElementById('donor-name').disabled = true;
-        document.getElementById('donor-email').disabled = true;
+        document.getElementById('tipper-name').disabled = true;
+        document.getElementById('tipper-email').disabled = true;
         document.getElementById('message').disabled = true;
 
         // Disable preset buttons
@@ -1019,8 +1019,8 @@
         method: 'POST',
         body: JSON.stringify({
           amount: Math.round(amt * 100),
-          donor_name: document.getElementById('donor-name').value.trim() || 'Anonymous',
-          donor_email: document.getElementById('donor-email').value.trim(),
+          tipper_name: document.getElementById('tipper-name').value.trim() || 'Anonymous',
+          tipper_email: document.getElementById('tipper-email').value.trim(),
           message: document.getElementById('message').value.trim(),
           idempotency_key: idempotencyKey
         })
@@ -1177,7 +1177,7 @@
     btn.disabled = true;
     btn.innerHTML = '<div class="spin"></div>';
 
-    const email = document.getElementById('donor-email').value.trim() || 'anonymous@tipx.app';
+    const email = document.getElementById('tipper-email').value.trim() || 'anonymous@tipx.app';
     try {
       const { error } = await stripe.confirmPayment({
         elements,

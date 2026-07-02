@@ -5,7 +5,7 @@ const { DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { s3Client } = require('../config/r2');
 
 // ── GET /dashboard/:slug ──────────────────────────────────────────────────────
-// Returns streamer profile + widget settings + recent donation summary
+// Returns streamer profile + widget settings + recent tip summary
 
 const getDashboard = async (req, res) => {
   const { slug } = req.params;
@@ -70,10 +70,10 @@ const getDashboard = async (req, res) => {
   }
 };
 
-// ── GET /dashboard/:slug/donations ────────────────────────────────────────────
-// Paginated donation history for the streamer's transaction log
+// ── GET /dashboard/:slug/tips ────────────────────────────────────────────
+// Paginated tip history for the streamer's transaction log
 
-const getDonations = async (req, res) => {
+const getTips = async (req, res) => {
   const { slug } = req.params;
   const limit = Math.min(parseInt(req.query.limit) || 50, 100);
   const offset = parseInt(req.query.offset) || 0;
@@ -87,11 +87,11 @@ const getDonations = async (req, res) => {
     if (!userRows.length) return res.status(404).json({ error: 'Not found.' });
     const streamerId = userRows[0].id;
 
-    const { rows: donations } = await query(
-      `SELECT id, donor_name, message, amount, currency,
+    const { rows: tips } = await query(
+      `SELECT id, tipper_name, message, amount, currency,
               platform_fee, stripe_fee_estimated, net_to_streamer,
               stripe_payment_intent, stripe_charge_id, status, is_replayed, created_at
-       FROM donations
+       FROM tips
        WHERE streamer_id = $1 AND status = 'succeeded'
        ORDER BY created_at DESC
        LIMIT $2 OFFSET $3`,
@@ -99,13 +99,13 @@ const getDonations = async (req, res) => {
     );
 
     const { rows: countRows } = await query(
-      `SELECT COUNT(*)::INT as total FROM donations WHERE streamer_id = $1 AND status = 'succeeded'`,
+      `SELECT COUNT(*)::INT as total FROM tips WHERE streamer_id = $1 AND status = 'succeeded'`,
       [streamerId]
     );
 
-    return res.json({ donations, total: countRows[0].total, limit, offset });
+    return res.json({ tips, total: countRows[0].total, limit, offset });
   } catch (err) {
-    console.error('[Streamer] getDonations error:', err.message);
+    console.error('[Streamer] getTips error:', err.message);
     return res.status(500).json({ error: 'Internal server error.' });
   }
 };
@@ -147,11 +147,11 @@ const testAlert = async (req, res) => {
     const ws = wsRows[0] || {};
 
     const io = require('../websockets/widgetSocket').getIO();
-    io.to(`streamer:${streamerId}`).emit('donation:alert', {
+    io.to(`streamer:${streamerId}`).emit('tip:alert', {
       type: 'test',
-      donation: {
+      tip: {
         id: 0,
-        donor_name: 'TipX',
+        tipper_name: 'TipX',
         message: '🎉 Test Alert — your widget is working!',
         amount: 5000,
         currency: 'THB',
@@ -171,65 +171,65 @@ const testAlert = async (req, res) => {
     return res.status(500).json({ error: 'Internal server error.' });
   }
 };
-// Re-broadcast a past donation alert to the OBS widget
+// Re-broadcast a past tip alert to the OBS widget
 
-const replayDonation = async (req, res) => {
+const replayTip = async (req, res) => {
   const { slug, id } = req.params;
 
   try {
     const { rows } = await query(
       `SELECT d.*, ws.alert_token, ws.alert_config
-       FROM donations d
+       FROM tips d
        JOIN users u ON u.id = d.streamer_id
        JOIN widget_settings ws ON ws.streamer_id = d.streamer_id
        WHERE d.id = $1 AND u.slug = $2 AND d.status = 'succeeded'`,
       [id, slug]
     );
 
-    if (!rows.length) return res.status(404).json({ error: 'Donation not found.' });
-    const donation = rows[0];
+    if (!rows.length) return res.status(404).json({ error: 'Tip not found.' });
+    const tip = rows[0];
 
     // Mark as replayed
-    await query(`UPDATE donations SET is_replayed = true WHERE id = $1`, [id]);
+    await query(`UPDATE tips SET is_replayed = true WHERE id = $1`, [id]);
 
     // Emit re-alert over WebSocket to the streamer's room
     const io = getIO();
-    io.to(`streamer:${donation.streamer_id}`).emit('donation:alert', {
+    io.to(`streamer:${tip.streamer_id}`).emit('tip:alert', {
       type: 'replay',
-      donation: {
-        id: donation.id,
-        donor_name: donation.donor_name,
-        message: donation.message,
-        amount: donation.amount,
-        currency: donation.currency,
-        created_at: donation.created_at,
+      tip: {
+        id: tip.id,
+        tipper_name: tip.tipper_name,
+        message: tip.message,
+        amount: tip.amount,
+        currency: tip.currency,
+        created_at: tip.created_at,
       },
-      config: donation.alert_config,
+      config: tip.alert_config,
     });
 
     return res.json({ ok: true });
   } catch (err) {
-    console.error('[Streamer] replayDonation error:', err.message);
+    console.error('[Streamer] replayTip error:', err.message);
     return res.status(500).json({ error: 'Internal server error.' });
   }
 };
 
-// ── DELETE /dashboard/:slug/donations/:id ─────────────────────────────────────
-const deleteDonation = async (req, res) => {
+// ── DELETE /dashboard/:slug/tips/:id ─────────────────────────────────────
+const deleteTip = async (req, res) => {
   const { slug, id } = req.params;
 
   try {
     const { rowCount } = await query(
-      `DELETE FROM donations d
+      `DELETE FROM tips d
        USING users u
        WHERE d.id = $1 AND u.slug = $2 AND d.streamer_id = u.id`,
       [id, slug]
     );
 
-    if (!rowCount) return res.status(404).json({ error: 'Donation not found.' });
+    if (!rowCount) return res.status(404).json({ error: 'Tip not found.' });
     return res.json({ ok: true });
   } catch (err) {
-    console.error('[Streamer] deleteDonation error:', err.message);
+    console.error('[Streamer] deleteTip error:', err.message);
     return res.status(500).json({ error: 'Internal server error.' });
   }
 };
@@ -281,7 +281,7 @@ const updateWidgetSettings = async (req, res) => {
     // Recalculate goal_current from history if start date was set/changed
     if (goal_start_date !== undefined) {
       const { rows: recalc } = await query(
-        `SELECT COALESCE(SUM(amount), 0)::INT as total FROM donations
+        `SELECT COALESCE(SUM(amount), 0)::INT as total FROM tips
          WHERE streamer_id = $1 AND status = 'succeeded' AND created_at >= $2`,
         [streamerId, goal_start_date || '1970-01-01']
       );
@@ -471,9 +471,9 @@ const unlinkStripe = async (req, res) => {
 
 module.exports = {
   getDashboard,
-  getDonations,
-  replayDonation,
-  deleteDonation,
+  getTips,
+  replayTip,
+  deleteTip,
   testAlert,
   toggleSelfActive,
   updateWidgetSettings,

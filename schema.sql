@@ -18,8 +18,8 @@ DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
     CREATE TYPE user_role AS ENUM ('admin', 'streamer');
   END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'donation_status') THEN
-    CREATE TYPE donation_status AS ENUM ('pending', 'succeeded', 'failed', 'refunded');
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'tip_status') THEN
+    CREATE TYPE tip_status AS ENUM ('pending', 'succeeded', 'failed', 'refunded');
   END IF;
 END $$;
 
@@ -73,27 +73,27 @@ CREATE TABLE widget_settings (
     }'::JSONB,
     -- Progress Bar config
     progress_config         JSONB        NOT NULL DEFAULT '{
-        "goal_label": "Donation Goal",
+        "goal_label": "Tip Goal",
         "bar_color": "#7C3AED",
         "text_color": "#FFFFFF",
         "bg_color": "#1a1a2e"
     }'::JSONB,
     goal_amount             INT          NOT NULL DEFAULT 0,        -- satang
     goal_current            INT          NOT NULL DEFAULT 0,        -- satang
-    goal_start_date         TIMESTAMPTZ,                            -- goal counts only donations after this date (NULL = all time)
+    goal_start_date         TIMESTAMPTZ,                            -- goal counts only tips after this date (NULL = all time)
     created_at              TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at              TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 CREATE INDEX idx_widget_token          ON widget_settings(alert_token);
 
 -- -------------------------
--- Donations
+-- Tips
 -- -------------------------
-CREATE TABLE donations (
+CREATE TABLE tips (
     id                      SERIAL PRIMARY KEY,
     streamer_id             INT           NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    donor_name              VARCHAR(50)   NOT NULL DEFAULT 'Anonymous',
-    donor_email             VARCHAR(254),                            -- nullable = anonymous
+    tipper_name             VARCHAR(50)   NOT NULL DEFAULT 'Anonymous',
+    tipper_email            VARCHAR(254),                            -- nullable = anonymous
     message                 VARCHAR(255),                            -- max 255 chars enforced
     amount                  INT           NOT NULL,                  -- total in satang (what donor paid)
     currency                VARCHAR(3)    NOT NULL DEFAULT 'THB',
@@ -102,14 +102,14 @@ CREATE TABLE donations (
     net_to_streamer         INT           NOT NULL DEFAULT 0,        -- amount - both fees
     stripe_payment_intent   VARCHAR(255)  UNIQUE NOT NULL,           -- pi_xxx
     stripe_charge_id        VARCHAR(255),                            -- ch_xxx (set after succeeded)
-    status                  donation_status NOT NULL DEFAULT 'pending',
+    status                  tip_status NOT NULL DEFAULT 'pending',
     is_replayed             BOOLEAN       NOT NULL DEFAULT FALSE,    -- for re-alert button
     created_at              TIMESTAMPTZ   NOT NULL DEFAULT NOW()
 );
-CREATE INDEX idx_donations_streamer_id  ON donations(streamer_id);
-CREATE INDEX idx_donations_status       ON donations(status);
-CREATE INDEX idx_donations_pi           ON donations(stripe_payment_intent);
-CREATE INDEX idx_donations_created      ON donations(streamer_id, created_at DESC);
+CREATE INDEX idx_tips_streamer_id  ON tips(streamer_id);
+CREATE INDEX idx_tips_status       ON tips(status);
+CREATE INDEX idx_tips_pi           ON tips(stripe_payment_intent);
+CREATE INDEX idx_tips_created      ON tips(streamer_id, created_at DESC);
 
 -- -------------------------
 -- Refresh Tokens (for JWT rotation)

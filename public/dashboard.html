@@ -341,7 +341,7 @@
           <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
           Test Alert
         </button>
-        <button class="btn btn-ghost btn-sm" onclick="loadDonationsLog()">
+        <button class="btn btn-ghost btn-sm" onclick="loadTipsLog()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38"/></svg>
           Refresh
         </button>
@@ -456,7 +456,7 @@
           <div class="section-card-header">
             <div class="section-card-title">Recent Tips</div>
           </div>
-          <div id="donations-log">
+          <div id="tips-log">
             <div style="padding:40px; text-align:center; color:var(--text-3)">
               <span class="spinner spinner-lg" style="color:var(--text-3)"></span>
             </div>
@@ -524,7 +524,7 @@
 
           <div class="section-card">
             <div class="section-card-header">
-              <div class="section-card-title">Donation goal</div>
+              <div class="section-card-title">Tip goal</div>
             </div>
             <div class="section-card-body">
               <div class="settings-grid">
@@ -539,7 +539,7 @@
                 <div class="form-field">
                   <label class="label" for="goal-start-date">Count from (optional)</label>
                   <input class="input" type="date" id="goal-start-date">
-                  <div class="text-xs text-muted" style="margin-top:4px">Progress only counts donations after this date</div>
+                  <div class="text-xs text-muted" style="margin-top:4px">Progress only counts tips after this date</div>
                 </div>
               </div>
             </div>
@@ -710,7 +710,7 @@
       }
       document.body.style.display = 'block';
       await loadDashboardData();
-      await loadDonationsLog();
+      await loadTipsLog();
     } catch (_) {
       document.body.style.display = 'block';
       showToast('Error loading dashboard. Check console.', 'error');
@@ -793,25 +793,25 @@
       .replace(/'/g, '&#039;');
   }
 
-  async function loadDonationsLog() {
-    const feed = document.getElementById('donations-log');
+  async function loadTipsLog() {
+    const feed = document.getElementById('tips-log');
     try {
-      const data = await apiFetch(`/dashboard/${streamerSlug}/donations?limit=50`);
-      if (!data.donations.length) {
+      const data = await apiFetch(`/dashboard/${streamerSlug}/tips?limit=50`);
+      if (!data.tips.length) {
         feed.innerHTML = '<div style="padding:40px; text-align:center; color:var(--text-3); font-size:14px">No tips received yet.</div>';
         return;
       }
       let html = '';
-      data.donations.forEach(d => {
+      data.tips.forEach(d => {
         const badge = '<span class="badge badge-green">Paid</span>';
         const replay = `<button class="btn btn-ghost btn-sm" onclick="replayAlert(${d.id})">
                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                Replay
              </button>`;
-        const del = `<button class="btn btn-danger-ghost btn-sm" onclick="deleteDonation(${d.id})" title="Delete" style="padding:4px 8px; margin-left:4px">
+        const del = `<button class="btn btn-danger-ghost btn-sm" onclick="deleteTip(${d.id})" title="Delete" style="padding:4px 8px; margin-left:4px">
                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
              </button>`;
-        const escapedName = escapeHTML(d.donor_name);
+        const escapedName = escapeHTML(d.tipper_name);
         const msg = (d.message && d.message.trim()) ? `<div class="feed-msg">${escapeHTML(d.message.trim())}</div>` : '';
         let feeInfo = '';
         if (!isStreamerExempt && d.status === 'succeeded') {
@@ -947,7 +947,7 @@
 
   async function replayAlert(id) {
     try {
-      await apiFetch(`/dashboard/${streamerSlug}/donations/${id}/replay`, { method: 'POST' });
+      await apiFetch(`/dashboard/${streamerSlug}/tips/${id}/replay`, { method: 'POST' });
       showToast('Replay triggered.', 'success');
     } catch (err) { showToast(err.message, 'error'); }
   }
@@ -991,18 +991,18 @@
     }
   }
 
-  async function deleteDonation(id) {
-    if (!confirm('Delete this donation record? This cannot be undone.')) return;
+  async function deleteTip(id) {
+    if (!confirm('Delete this tip record? This cannot be undone.')) return;
     try {
-      await apiFetch(`/dashboard/${streamerSlug}/donations/${id}`, { method: 'DELETE' });
-      showToast('Donation deleted.', 'success');
-      await loadDonationsLog();
+      await apiFetch(`/dashboard/${streamerSlug}/tips/${id}`, { method: 'DELETE' });
+      showToast('Tip deleted.', 'success');
+      await loadTipsLog();
     } catch (err) { showToast(err.message, 'error'); }
   }
 
   async function testAlert() {
     try {
-      await apiFetch(`/dashboard/${streamerSlug}/donations/test-alert`, { method: 'POST' });
+      await apiFetch(`/dashboard/${streamerSlug}/tips/test-alert`, { method: 'POST' });
       showToast('Test alert sent! Check OBS.', 'success');
     } catch (err) { showToast(err.message, 'error'); }
   }

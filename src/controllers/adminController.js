@@ -68,12 +68,12 @@ const listStreamers = async (req, res) => {
          u.id, u.username, u.slug, u.email, u.is_active, u.role,
          u.stripe_onboarding_done, u.stripe_account_id, u.created_at,
          ws.goal_amount, ws.goal_current, ws.alert_token,
-         COUNT(d.id)::INT            AS total_donations,
+         COUNT(d.id)::INT            AS total_tips,
          COALESCE(SUM(d.amount), 0)::INT AS total_volume,
          COALESCE(SUM(d.platform_fee), 0)::INT AS total_platform_fee
        FROM users u
        LEFT JOIN widget_settings ws ON ws.streamer_id = u.id
-       LEFT JOIN donations d ON d.streamer_id = u.id AND d.status = 'succeeded'
+       LEFT JOIN tips d ON d.streamer_id = u.id AND d.status = 'succeeded'
        WHERE u.role = 'streamer' OR u.slug IS NOT NULL
        GROUP BY u.id, ws.streamer_id
        ORDER BY u.created_at DESC`

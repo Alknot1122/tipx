@@ -188,9 +188,9 @@ app.get('/dashboard/:slug', noCache, (req, res) => {
   res.sendFile(path.join(__dirname, '../public/dashboard.html'));
 });
 
-// Any other single-level URL slug serves the Streamer Public Donation Page
+// Any other single-level URL slug serves the Streamer Public Tip Page
 app.get('/:slug', noCache, (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/donate.html'));
+  res.sendFile(path.join(__dirname, '../public/tip.html'));
 });
 
 // ── 404 Catch-all ─────────────────────────────────────────────────────────────

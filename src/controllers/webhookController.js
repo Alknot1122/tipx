@@ -57,7 +57,7 @@ const handlePaymentSucceeded = async (paymentIntent) => {
   } = paymentIntent;
 
   const chargeId = charges?.data?.[0]?.id || null;
-  const { streamer_id, donor_name, message, donor_email } = metadata || {};
+  const { streamer_id, tipper_name, message, tipper_email } = metadata || {};
 
   if (!streamer_id) {
     console.warn('[Webhook] payment_intent.succeeded missing streamer_id metadata:', piId);
@@ -66,18 +66,18 @@ const handlePaymentSucceeded = async (paymentIntent) => {
 
   try {
     await transaction(async (tx) => {
-      // Fetch existing pending donation row
+      // Fetch existing pending tip row
       const { rows: existing } = await tx(
-        `SELECT * FROM donations WHERE stripe_payment_intent = $1`,
+        `SELECT * FROM tips WHERE stripe_payment_intent = $1`,
         [piId]
       );
 
-      let donation;
+      let tip;
 
       if (existing.length) {
         // Only update if still pending (idempotent — duplicate webhooks are no-ops)
         const { rows: updated } = await tx(
-          `UPDATE donations
+          `UPDATE tips
            SET status = 'succeeded', stripe_charge_id = $1
            WHERE stripe_payment_intent = $2 AND status = 'pending'
            RETURNING *`,
@@ -85,12 +85,12 @@ const handlePaymentSucceeded = async (paymentIntent) => {
         );
         if (!updated.length) {
           // Already succeeded — duplicate webhook, skip broadcast
-          console.log(`[Webhook] Donation for PI ${piId} already succeeded — skipping broadcast.`);
+          console.log(`[Webhook] Tip for PI ${piId} already succeeded — skipping broadcast.`);
           return;
         }
-        donation = updated[0];
+        tip = updated[0];
       } else {
-        // Insert new donation row (normal path after pending-insert removal)
+        // Insert new tip row (normal path after pending-insert removal)
         const { rows: userRows } = await tx(
           `SELECT role, slug, username FROM users WHERE id = $1`,
           [parseInt(streamer_id)]
@@ -103,16 +103,16 @@ const handlePaymentSucceeded = async (paymentIntent) => {
 
         try {
           const { rows: inserted } = await tx(
-            `INSERT INTO donations
-               (streamer_id, donor_name, donor_email, message, amount, currency,
+             `INSERT INTO tips
+               (streamer_id, tipper_name, tipper_email, message, amount, currency,
                 platform_fee, stripe_fee_estimated, net_to_streamer,
                 stripe_payment_intent, stripe_charge_id, status)
              VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'succeeded')
              RETURNING *`,
             [
               parseInt(streamer_id),
-              (donor_name || 'Anonymous').slice(0, 50),
-              donor_email || null,
+              (tipper_name || 'Anonymous').slice(0, 50),
+              tipper_email || null,
               (message || '').slice(0, 255) || null,
               amount,
               (currency || 'THB').toUpperCase(),
@@ -123,24 +123,24 @@ const handlePaymentSucceeded = async (paymentIntent) => {
               chargeId,
             ]
           );
-          donation = inserted[0];
+          tip = inserted[0];
         } catch (insertErr) {
           // UNIQUE constraint on stripe_payment_intent — duplicate webhook race
           if (insertErr.code === '23505') {
-            console.log(`[Webhook] Donation for PI ${piId} already inserted — skipping.`);
+            console.log(`[Webhook] Tip for PI ${piId} already inserted — skipping.`);
             return;
           }
           throw insertErr;
         }
       }
 
-      // Update progress bar — only count if donation is after goal_start_date (if set)
+      // Update progress bar — only count if tip is after goal_start_date (if set)
       await tx(
         `UPDATE widget_settings SET goal_current = 
            CASE WHEN goal_start_date IS NULL OR $3::timestamptz >= goal_start_date
                 THEN LEAST(goal_current + $1, goal_amount) ELSE goal_current END
          WHERE streamer_id = $2`,
-        [donation.amount, parseInt(streamer_id), donation.created_at]
+        [tip.amount, parseInt(streamer_id), tip.created_at]
       );
 
       // Fetch widget config for the alert payload
@@ -156,14 +156,14 @@ const handlePaymentSucceeded = async (paymentIntent) => {
       const room = `streamer:${streamer_id}`;
 
       const alertPayload = {
-        type: 'new_donation',
-        donation: {
-          id:           donation.id,
-          donor_name:   donation.donor_name,
-          message:      donation.message,
-          amount:       donation.amount,
-          currency:     donation.currency,
-          created_at:   donation.created_at,
+        type: 'new_tip',
+        tip: {
+          id:           tip.id,
+          tipper_name:  tip.tipper_name,
+          message:      tip.message,
+          amount:       tip.amount,
+          currency:     tip.currency,
+          created_at:   tip.created_at,
         },
         alert_config:    ws.alert_config || {},
         progress: {
@@ -173,8 +173,8 @@ const handlePaymentSucceeded = async (paymentIntent) => {
         },
       };
 
-      io.to(room).emit('donation:alert', alertPayload);
-      console.log(`[Webhook] ✅ Donation #${donation.id} broadcast to room ${room}`);
+      io.to(room).emit('tip:alert', alertPayload);
+      console.log(`[Webhook] ✅ Tip #${tip.id} broadcast to room ${room}`);
     });
   } catch (err) {
     console.error('[Webhook] handlePaymentSucceeded error:', err.message);
@@ -201,12 +201,12 @@ const handlePaymentCanceled = async (paymentIntent) => {
   const { id: piId } = paymentIntent;
 
   const { rows: existing } = await query(
-    `SELECT id, status FROM donations WHERE stripe_payment_intent = $1`,
+    `SELECT id, status FROM tips WHERE stripe_payment_intent = $1`,
     [piId]
   );
 
   if (existing.length && existing[0].status === 'pending') {
-    await query(`DELETE FROM donations WHERE id = $1`, [existing[0].id]);
+    await query(`DELETE FROM tips WHERE id = $1`, [existing[0].id]);
     console.log(`[Webhook] Cleaned up canceled PI ${piId} — pending row deleted.`);
   }
 };
