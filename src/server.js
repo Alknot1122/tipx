@@ -93,7 +93,7 @@ app.use(helmet({
         "https://api.stripe.com",
         "https://*.r2.dev"
       ],
-      frameSrc: ["'self'", "https://js.stripe.com", "https://*.stripe.com"],
+      frameSrc: ["'self'", "https://js.stripe.com", "https://*.stripe.com", "https://www.youtube.com", "https://www.youtube-nocookie.com"],
       objectSrc: ["'none'"],
     },
   },
