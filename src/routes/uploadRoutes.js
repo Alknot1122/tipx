@@ -28,8 +28,23 @@ const upload = multer({
   }
 });
 
+// Wrapper to catch multer errors
+const uploadHandler = (req, res, next) => {
+  upload.single('image')(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(413).json({ error: 'File is too large. Max size is 25MB.' });
+      }
+      return res.status(400).json({ error: `Upload error: ${err.message}` });
+    } else if (err) {
+      return res.status(400).json({ error: err.message });
+    }
+    next();
+  });
+};
+
 // POST /api/dashboard/:slug/upload
-router.post('/:slug/upload', uploadLimiter, requireAuth, requireSelf, upload.single('image'), async (req, res) => {
+router.post('/:slug/upload', uploadLimiter, requireAuth, requireSelf, uploadHandler, async (req, res) => {
   const { slug } = req.params;
   const { type } = req.query; // 'avatar' or 'background'
 

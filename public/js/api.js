@@ -46,7 +46,13 @@ async function apiFetch(endpoint, options = {}) {
         errorMessage = errorData.error || errorMessage;
       } catch (e) {
         // Fallback to text status if JSON parsing fails
-        errorMessage = response.statusText || errorMessage;
+        if (response.status === 413) {
+          errorMessage = 'File is too large to upload. Please choose a smaller file.';
+        } else if (response.status === 502) {
+          errorMessage = 'Server is restarting or offline. Please try again in a moment.';
+        } else {
+          errorMessage = response.statusText || `HTTP Error ${response.status}`;
+        }
       }
       throw new Error(errorMessage);
     }
