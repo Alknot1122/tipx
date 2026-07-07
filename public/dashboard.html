@@ -610,6 +610,22 @@
                     <label for="profile-twitch-show" style="font-size: 13px; color: var(--text-2); cursor: pointer; margin: 0;">Show Twitch button</label>
                   </div>
                 </div>
+                <div class="form-field">
+                  <label class="label" for="profile-youtube">YouTube Username / Handle</label>
+                  <input class="input" type="text" id="profile-youtube" placeholder="alxo9s">
+                  <div style="margin-top: 8px; display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="profile-youtube-show">
+                    <label for="profile-youtube-show" style="font-size: 13px; color: var(--text-2); cursor: pointer; margin: 0;">Show YouTube button</label>
+                  </div>
+                </div>
+                <div class="form-field">
+                  <label class="label" for="profile-twitter">Twitter / X Username</label>
+                  <input class="input" type="text" id="profile-twitter" placeholder="alxo9_">
+                  <div style="margin-top: 8px; display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="profile-twitter-show">
+                    <label for="profile-twitter-show" style="font-size: 13px; color: var(--text-2); cursor: pointer; margin: 0;">Show Twitter button</label>
+                  </div>
+                </div>
                 <div class="form-field span-2">
                   <label class="label" for="profile-bio">Bio / Intro Text</label>
                   <textarea class="input" id="profile-bio" rows="4" placeholder="i'm al. i doing a cover music..."></textarea>
@@ -788,6 +804,10 @@
       document.getElementById('slug-preview').textContent = db.slug || '—';
       document.getElementById('profile-twitch').value = db.twitch_username || '';
       document.getElementById('profile-twitch-show').checked = !!db.show_twitch_link;
+      document.getElementById('profile-youtube').value = db.youtube_username || '';
+      document.getElementById('profile-youtube-show').checked = !!db.show_youtube_link;
+      document.getElementById('profile-twitter').value = db.twitter_username || '';
+      document.getElementById('profile-twitter-show').checked = !!db.show_twitter_link;
       document.getElementById('profile-bio').value = db.bio_text || '';
       document.getElementById('profile-bio-show').checked = !!db.show_bio;
       document.getElementById('profile-avatar').value = db.avatar_url || '';
@@ -956,6 +976,10 @@
           bg_position_y: document.getElementById('bg-position-y').value,
           twitch_username: document.getElementById('profile-twitch').value.trim(),
           show_twitch_link: document.getElementById('profile-twitch-show').checked,
+          youtube_username: document.getElementById('profile-youtube').value.trim(),
+          show_youtube_link: document.getElementById('profile-youtube-show').checked,
+          twitter_username: document.getElementById('profile-twitter').value.trim(),
+          show_twitter_link: document.getElementById('profile-twitter-show').checked,
           bio_text: document.getElementById('profile-bio').value,
           show_bio: document.getElementById('profile-bio-show').checked
         })

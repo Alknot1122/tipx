@@ -10,7 +10,10 @@ const getPublicPage = async (req, res) => {
   try {
     const { rows } = await query(
       `SELECT u.role, u.username, u.slug, u.stripe_account_id, u.stripe_onboarding_done,
-              u.twitch_username, u.show_twitch_link, u.bio_text, u.show_bio,
+              u.twitch_username, u.show_twitch_link, 
+              u.youtube_username, u.show_youtube_link,
+              u.twitter_username, u.show_twitter_link,
+              u.bio_text, u.show_bio,
               u.avatar_url, u.bg_color, u.bg_image_url,
               u.avatar_focal_x, u.avatar_focal_y, u.bg_position_x, u.bg_position_y, u.bg_scale,
               ws.goal_amount, ws.goal_current, ws.goal_start_date, ws.progress_config

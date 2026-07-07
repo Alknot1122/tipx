@@ -37,6 +37,10 @@ CREATE TABLE users (
     stripe_onboarding_done  BOOLEAN      NOT NULL DEFAULT FALSE,
     twitch_username         VARCHAR(50),                           -- Twitch link
     show_twitch_link        BOOLEAN      NOT NULL DEFAULT FALSE,   -- Toggle for twitch
+    youtube_username        VARCHAR(50),                           -- YouTube link
+    show_youtube_link       BOOLEAN      NOT NULL DEFAULT FALSE,   -- Toggle for youtube
+    twitter_username        VARCHAR(50),                           -- Twitter link
+    show_twitter_link       BOOLEAN      NOT NULL DEFAULT FALSE,   -- Toggle for twitter
     bio_text                TEXT,                                  -- Bio intro text
     show_bio                BOOLEAN      NOT NULL DEFAULT FALSE,   -- Toggle for bio
     avatar_url              VARCHAR(512),                          -- Custom profile avatar
