@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const { PutObjectCommand } = require('@aws-sdk/client-s3');
+const { PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { s3Client } = require('../config/r2');
+const pool = require('../config/db');
 const { requireAuth, requireSelf } = require('../middleware/auth');
 const crypto = require('crypto');
 const rateLimiter = require('../middleware/rateLimiter');
@@ -16,7 +17,7 @@ const ALLOWED_MIME = ['image/webp', 'image/jpeg', 'image/png', 'image/gif', 'ima
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB limit
+    fileSize: 25 * 1024 * 1024 // 25MB limit
   },
   fileFilter: (_req, file, cb) => {
     if (ALLOWED_MIME.includes(file.mimetype)) {
@@ -42,6 +43,27 @@ router.post('/:slug/upload', uploadLimiter, requireAuth, requireSelf, upload.sin
 
     if (!bucketName || !publicUrl) {
       return res.status(500).json({ error: 'Cloudflare R2 is not fully configured.' });
+    }
+
+    // Fetch the old image URL
+    try {
+      const userRes = await pool.query('SELECT avatar_url, bg_image_url FROM users WHERE slug = $1', [slug]);
+      if (userRes.rows.length > 0) {
+        const oldUrl = type === 'background' ? userRes.rows[0].bg_image_url : userRes.rows[0].avatar_url;
+        const publicBase = publicUrl.replace(/\/$/, '');
+        if (oldUrl && oldUrl.startsWith(publicBase)) {
+          const oldKey = oldUrl.substring(publicBase.length + 1);
+          if (oldKey) {
+            await s3Client.send(new DeleteObjectCommand({
+              Bucket: bucketName,
+              Key: oldKey
+            }));
+            console.log(`[Upload] Deleted old file: ${oldKey}`);
+          }
+        }
+      }
+    } catch (e) {
+      console.error('[Upload] Error deleting old file:', e);
     }
 
     const folder = type === 'background' ? 'backgrounds' : 'avatars';
