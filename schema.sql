@@ -43,6 +43,8 @@ CREATE TABLE users (
     show_twitter_link       BOOLEAN      NOT NULL DEFAULT FALSE,   -- Toggle for twitter
     bio_text                TEXT,                                  -- Bio intro text
     show_bio                BOOLEAN      NOT NULL DEFAULT FALSE,   -- Toggle for bio
+    youtube_video_url       VARCHAR(512),                          -- YouTube video link
+    show_youtube_video      BOOLEAN      NOT NULL DEFAULT FALSE,   -- Toggle for youtube video
     avatar_url              VARCHAR(512),                          -- Custom profile avatar
     bg_color                VARCHAR(7)   DEFAULT '#0B0E14',        -- Custom page background color (Hex)
     bg_image_url            VARCHAR(512),                          -- Custom page background image

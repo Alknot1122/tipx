@@ -635,6 +635,14 @@
                   </div>
                 </div>
                 <div class="form-field span-2">
+                  <label class="label" for="profile-youtube-video">YouTube Video Embed URL</label>
+                  <input class="input" type="text" id="profile-youtube-video" placeholder="https://youtu.be/...">
+                  <div style="margin-top: 8px; display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="profile-youtube-video-show">
+                    <label for="profile-youtube-video-show" style="font-size: 13px; color: var(--text-2); cursor: pointer; margin: 0;">Show Video</label>
+                  </div>
+                </div>
+                <div class="form-field span-2">
                   <label class="label">Avatar Photo</label>
                   <div class="upload-group">
                     <img id="avatar-preview" src="/favicon.ico" class="avatar-preview-img" alt="Avatar">
@@ -810,6 +818,8 @@
       document.getElementById('profile-twitter-show').checked = !!db.show_twitter_link;
       document.getElementById('profile-bio').value = db.bio_text || '';
       document.getElementById('profile-bio-show').checked = !!db.show_bio;
+      document.getElementById('profile-youtube-video').value = db.youtube_video_url || '';
+      document.getElementById('profile-youtube-video-show').checked = !!db.show_youtube_video;
       document.getElementById('profile-avatar').value = db.avatar_url || '';
       document.getElementById('avatar-preview').src = db.avatar_url || '/favicon.ico';
       document.getElementById('profile-bg-color').value = db.bg_color || '#f7f8fa';
@@ -981,7 +991,9 @@
           twitter_username: document.getElementById('profile-twitter').value.trim(),
           show_twitter_link: document.getElementById('profile-twitter-show').checked,
           bio_text: document.getElementById('profile-bio').value,
-          show_bio: document.getElementById('profile-bio-show').checked
+          show_bio: document.getElementById('profile-bio-show').checked,
+          youtube_video_url: document.getElementById('profile-youtube-video').value.trim(),
+          show_youtube_video: document.getElementById('profile-youtube-video-show').checked
         })
       });
       showToast('Profile updated.', 'success');

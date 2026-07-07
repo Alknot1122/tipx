@@ -19,6 +19,7 @@ const getDashboard = async (req, res) => {
               u.youtube_username, u.show_youtube_link,
               u.twitter_username, u.show_twitter_link,
               u.bio_text, u.show_bio,
+              u.youtube_video_url, u.show_youtube_video,
               u.avatar_url, u.bg_color, u.bg_image_url,
               u.avatar_focal_x, u.avatar_focal_y, u.bg_position_x, u.bg_position_y, u.bg_scale,
               ws.alert_token, ws.alert_config, ws.progress_config,
@@ -56,6 +57,7 @@ const getDashboard = async (req, res) => {
                 u.youtube_username, u.show_youtube_link,
                 u.twitter_username, u.show_twitter_link,
                 u.bio_text, u.show_bio,
+                u.youtube_video_url, u.show_youtube_video,
                 u.avatar_url, u.bg_color, u.bg_image_url,
               u.avatar_focal_x, u.avatar_focal_y, u.bg_position_x, u.bg_position_y, u.bg_scale,
                 ws.alert_token, ws.alert_config, ws.progress_config,
@@ -390,7 +392,8 @@ const updateProfile = async (req, res) => {
           twitch_username, show_twitch_link, 
           youtube_username, show_youtube_link,
           twitter_username, show_twitter_link,
-          bio_text, show_bio } = req.body;
+          bio_text, show_bio,
+          youtube_video_url, show_youtube_video } = req.body;
 
   if (bg_color && !/^#[0-9A-Fa-f]{6}$/.test(bg_color)) {
     return res.status(400).json({ error: 'Invalid background color format. Must be a 6-digit hex color starting with #.' });
@@ -424,14 +427,15 @@ const updateProfile = async (req, res) => {
            twitch_username = $10, show_twitch_link = $11, 
            youtube_username = $12, show_youtube_link = $13,
            twitter_username = $14, show_twitter_link = $15,
-           bio_text = $16, show_bio = $17, updated_at = NOW()
-       WHERE slug = $18 AND (role = 'streamer' OR role = 'admin') AND is_active = true
+           bio_text = $16, show_bio = $17, 
+           youtube_video_url = $18, show_youtube_video = $19, updated_at = NOW()
+       WHERE slug = $20 AND (role = 'streamer' OR role = 'admin') AND is_active = true
        RETURNING id, username, slug, avatar_url, bg_color, bg_image_url,
                  avatar_focal_x, avatar_focal_y, bg_position_x, bg_position_y, bg_scale,
                  twitch_username, show_twitch_link, 
                  youtube_username, show_youtube_link,
                  twitter_username, show_twitter_link,
-                 bio_text, show_bio`,
+                 bio_text, show_bio, youtube_video_url, show_youtube_video`,
       [resolvedSlug, avatar_url || null, bg_color || '#0B0E14', bg_image_url || null,
        parseInt(avatar_focal_x) || 50, parseInt(avatar_focal_y) || 50,
        parseInt(bg_position_x) || 50, parseInt(bg_position_y) || 50,
@@ -440,6 +444,7 @@ const updateProfile = async (req, res) => {
        youtube_username || null, !!show_youtube_link,
        twitter_username || null, !!show_twitter_link,
        bio_text || null, !!show_bio,
+       youtube_video_url || null, !!show_youtube_video,
        slug]
     );
 
