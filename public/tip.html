@@ -468,6 +468,50 @@
     body.theme-glass #bio-box { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.85); border: 1px solid rgba(255,255,255,0.15); }
     body.theme-dark #bio-box { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.8); border: 1px solid rgba(255,255,255,0.1); }
 
+    /* For Light Glass (White Transparency) */
+    body.theme-light-glass input, 
+    body.theme-light-glass textarea, 
+    body.theme-light-glass .preset-btn {
+      background: rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(32px);
+      -webkit-backdrop-filter: blur(32px);
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      color: #111;
+    }
+    body.theme-light-glass input::placeholder, 
+    body.theme-light-glass textarea::placeholder {
+      color: rgba(0, 0, 0, 0.5);
+    }
+    body.theme-light-glass input:focus, 
+    body.theme-light-glass textarea:focus {
+      background: rgba(255, 255, 255, 0.8);
+      border-color: rgba(0, 0, 0, 0.3);
+      box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.08);
+    }
+    body.theme-light-glass .preset-btn:hover { background: rgba(255, 255, 255, 0.7); border-color: rgba(0, 0, 0, 0.3); color: #111; }
+    body.theme-light-glass .preset-btn.sel { background: var(--indigo); color: #fff; border-color: var(--indigo); }
+    body.theme-light-glass .btn-main { background: #111; color: #fff; }
+    body.theme-light-glass .btn-main:hover:not(:disabled) { background: #000; }
+    
+    body.theme-light-glass .field-label { color: rgba(0,0,0,0.8); }
+    body.theme-light-glass .creator-name { color: #111; }
+    body.theme-light-glass .creator-handle { color: rgba(0,0,0,0.7); }
+    body.theme-light-glass .brand-footer { color: rgba(0,0,0,0.5); }
+    body.theme-light-glass .brand-footer span { color: rgba(0,0,0,0.8); }
+    body.theme-light-glass .goal-header span { color: rgba(0,0,0,0.8); }
+    body.theme-light-glass .goal-track { background: rgba(0,0,0,0.1); }
+    body.theme-light-glass .goal-fill { background: var(--indigo); }
+    body.theme-light-glass .tip-info { color: rgba(0,0,0,0.6); }
+    body.theme-light-glass .sep { background: rgba(0,0,0,0.1); }
+    body.theme-light-glass .back-link { color: rgba(0,0,0,0.6); }
+    body.theme-light-glass .back-link:hover { color: #111; }
+    body.theme-light-glass .legal-block { background: rgba(255,255,255,0.4); border-color: rgba(0,0,0,0.1); }
+    body.theme-light-glass .legal-block p { color: rgba(0,0,0,0.65); }
+    body.theme-light-glass .legal-block strong { color: rgba(0,0,0,0.9); }
+    body.theme-light-glass .footer-links a { color: rgba(0,0,0,0.5); }
+    body.theme-light-glass .footer-links a:hover { color: #111; }
+    body.theme-light-glass #bio-box { background: rgba(255,255,255,0.6); color: rgba(0,0,0,0.85); border: 1px solid rgba(0,0,0,0.15); }
+
     /* ─── Welcome Modal ───────────────────── */
     #welcome-modal {
       position: fixed;
@@ -1188,7 +1232,7 @@
         Object.assign(document.body.style, {
           background: `linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.2)), url(${s.bg_image_url}) ${bgX}% ${bgY}%/cover no-repeat ${isMobile ? 'scroll' : 'fixed'}`,
         });
-        document.body.classList.add('theme-glass');
+        
         // Parallax on scroll
         if (isMobile) {
           let ticking = false;
@@ -1204,8 +1248,22 @@
         }
       } else if (s.bg_color) {
         document.body.style.background = s.bg_color;
-        const isDark = hexBrightness(s.bg_color) < 140;
-        if (isDark) document.body.classList.add('theme-dark');
+      }
+      
+      // Apply Theme Preset
+      if (s.theme_preset) {
+        if (s.theme_preset === 'dark') document.body.classList.add('theme-glass');
+        else if (s.theme_preset === 'light') document.body.classList.add('theme-light-glass');
+        else if (s.theme_preset === 'solid-dark') document.body.classList.add('theme-dark');
+        // 'solid-light' is the default without any class
+      } else {
+        // Fallback logic for legacy profiles without theme_preset
+        if (s.bg_image_url) {
+          document.body.classList.add('theme-glass');
+        } else if (s.bg_color) {
+          const isDark = hexBrightness(s.bg_color) < 140;
+          if (isDark) document.body.classList.add('theme-dark');
+        }
       }
 
       // Background + avatar — set first, then preload images before revealing
@@ -1300,8 +1358,12 @@
         stripe = Stripe(stripeKey);
       }
       
-      const isGlass = document.body.classList.contains('theme-glass');
-      const isDarkTheme = document.body.classList.contains('theme-dark') || isGlass;
+      const isDarkGlass = document.body.classList.contains('theme-glass');
+      const isLightGlass = document.body.classList.contains('theme-light-glass');
+      const isSolidDark = document.body.classList.contains('theme-dark');
+      
+      const isGlass = isDarkGlass || isLightGlass;
+      const isDarkTheme = isDarkGlass || isSolidDark;
 
       elements = stripe.elements({
         clientSecret: res.client_secret,
@@ -1311,62 +1373,62 @@
             fontFamily: '"Inter", -apple-system, sans-serif',
             fontSizeBase: '15px',
             colorText: isDarkTheme ? '#ffffff' : '#111111',
-            colorBackground: isGlass ? 'rgba(255,255,255,0.08)' : (isDarkTheme ? '#1e293b' : '#ffffff'),
-            colorTextPlaceholder: isDarkTheme ? 'rgba(255,255,255,0.5)' : '#bbbbbb',
-            colorPrimary: isGlass ? '#ffffff' : '#5b5fc7',
+            colorBackground: isGlass ? (isDarkGlass ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.5)') : (isSolidDark ? '#1e293b' : '#ffffff'),
+            colorTextPlaceholder: isDarkTheme ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
+            colorPrimary: isGlass ? (isDarkGlass ? '#ffffff' : '#111111') : '#5b5fc7',
             colorDanger: '#e53935',
             borderRadius: '12px',
           },
           rules: {
             '.Block': {
-              border: isGlass ? '1px solid rgba(255,255,255,0.15)' : (isDarkTheme ? '1px solid rgba(255,255,255,0.1)' : '1.5px solid rgba(0,0,0,0.09)'),
+              border: isGlass ? (isDarkGlass ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(0,0,0,0.12)') : (isSolidDark ? '1px solid rgba(255,255,255,0.1)' : '1.5px solid rgba(0,0,0,0.09)'),
               borderRadius: '12px',
-              backgroundColor: isGlass ? 'rgba(255,255,255,0.08)' : (isDarkTheme ? '#1e293b' : '#ffffff'),
+              backgroundColor: isGlass ? (isDarkGlass ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.5)') : (isSolidDark ? '#1e293b' : '#ffffff'),
               color: isDarkTheme ? '#ffffff' : '#111111',
               padding: '16px 20px',
               boxShadow: 'none',
             },
             '.Input': {
-              border: isGlass ? '1px solid rgba(255,255,255,0.15)' : (isDarkTheme ? '1px solid rgba(255,255,255,0.1)' : '1.5px solid rgba(0,0,0,0.09)'),
+              border: isGlass ? (isDarkGlass ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(0,0,0,0.12)') : (isSolidDark ? '1px solid rgba(255,255,255,0.1)' : '1.5px solid rgba(0,0,0,0.09)'),
               borderRadius: '12px',
               padding: '13px 16px',
               boxShadow: 'none',
-              backgroundColor: isGlass ? 'rgba(255,255,255,0.08)' : (isDarkTheme ? 'rgba(255,255,255,0.05)' : '#fff'),
+              backgroundColor: isGlass ? (isDarkGlass ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.5)') : (isSolidDark ? 'rgba(255,255,255,0.05)' : '#fff'),
               fontSize: '15px',
               color: isDarkTheme ? '#fff' : '#111',
             },
             '.Input:focus': {
-              border: isGlass ? '1px solid rgba(255,255,255,0.4)' : (isDarkTheme ? '1px solid rgba(255,255,255,0.3)' : '1.5px solid #5b5fc7'),
-              boxShadow: isGlass ? '0 0 0 3px rgba(255,255,255,0.15)' : (isDarkTheme ? 'none' : '0 0 0 3px rgba(91,95,199,0.12)'),
-              backgroundColor: isGlass ? 'rgba(255,255,255,0.12)' : (isDarkTheme ? 'rgba(255,255,255,0.08)' : '#fff'),
+              border: isGlass ? (isDarkGlass ? '1px solid rgba(255,255,255,0.4)' : '1px solid rgba(0,0,0,0.3)') : (isSolidDark ? '1px solid rgba(255,255,255,0.3)' : '1.5px solid #5b5fc7'),
+              boxShadow: isGlass ? (isDarkGlass ? '0 0 0 3px rgba(255,255,255,0.15)' : '0 0 0 3px rgba(0,0,0,0.08)') : (isSolidDark ? 'none' : '0 0 0 3px rgba(91,95,199,0.12)'),
+              backgroundColor: isGlass ? (isDarkGlass ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.8)') : (isSolidDark ? 'rgba(255,255,255,0.08)' : '#fff'),
             },
             '.Label': {
               fontSize: '11px',
               fontWeight: '600',
               textTransform: 'uppercase',
               letterSpacing: '0.07em',
-              color: isGlass ? 'rgba(255,255,255,0.8)' : (isDarkTheme ? 'rgba(255,255,255,0.7)' : '#999'),
+              color: isGlass ? (isDarkGlass ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)') : (isSolidDark ? 'rgba(255,255,255,0.7)' : '#999'),
               marginBottom: '8px',
             },
             '.Tab': {
-              border: isGlass ? '1px solid rgba(255,255,255,0.15)' : (isDarkTheme ? '1px solid rgba(255,255,255,0.1)' : '1.5px solid rgba(0,0,0,0.09)'),
+              border: isGlass ? (isDarkGlass ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(0,0,0,0.12)') : (isSolidDark ? '1px solid rgba(255,255,255,0.1)' : '1.5px solid rgba(0,0,0,0.09)'),
               borderRadius: '10px',
-              backgroundColor: isGlass ? 'rgba(255,255,255,0.08)' : (isDarkTheme ? 'rgba(255,255,255,0.05)' : '#fff'),
+              backgroundColor: isGlass ? (isDarkGlass ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.5)') : (isSolidDark ? 'rgba(255,255,255,0.05)' : '#fff'),
               boxShadow: 'none',
               padding: '10px 14px',
-              color: isDarkTheme ? 'rgba(255,255,255,0.7)' : '#555',
+              color: isDarkTheme ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)',
             },
             '.Tab:hover': { 
-              borderColor: isGlass ? 'rgba(255,255,255,0.4)' : (isDarkTheme ? 'rgba(255,255,255,0.3)' : '#5b5fc7'),
+              borderColor: isGlass ? (isDarkGlass ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.3)') : (isSolidDark ? 'rgba(255,255,255,0.3)' : '#5b5fc7'),
               color: isDarkTheme ? '#fff' : '#5b5fc7' 
             },
             '.Tab--selected': {
-              border: isGlass ? '1px solid rgba(255,255,255,0.9)' : (isDarkTheme ? '1px solid var(--indigo)' : '1.5px solid #5b5fc7'),
-              color: isGlass ? '#000' : (isDarkTheme ? '#fff' : '#5b5fc7'),
-              backgroundColor: isGlass ? 'rgba(255,255,255,0.9)' : (isDarkTheme ? 'var(--indigo)' : 'rgba(91,95,199,0.06)'),
+              border: isGlass ? (isDarkGlass ? '1px solid rgba(255,255,255,0.9)' : '1px solid rgba(0,0,0,0.9)') : (isSolidDark ? '1px solid var(--indigo)' : '1.5px solid #5b5fc7'),
+              color: isGlass ? (isDarkGlass ? '#000' : '#fff') : (isSolidDark ? '#fff' : '#5b5fc7'),
+              backgroundColor: isGlass ? (isDarkGlass ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)') : (isSolidDark ? 'var(--indigo)' : 'rgba(91,95,199,0.06)'),
               boxShadow: 'none',
             },
-            '.TabIcon--selected': { fill: isGlass ? '#000' : (isDarkTheme ? '#fff' : '#5b5fc7') },
+            '.TabIcon--selected': { fill: isGlass ? (isDarkGlass ? '#000' : '#fff') : (isSolidDark ? '#fff' : '#5b5fc7') },
             '.Error': { fontSize: '13px', color: '#e53935' },
           }
         }

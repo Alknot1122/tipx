@@ -665,6 +665,15 @@
                   </div>
                 </div>
                 <div class="form-field">
+                  <label class="label" for="profile-theme-preset">UI Theme Preset</label>
+                  <select class="input" id="profile-theme-preset">
+                    <option value="dark">Dark Glass (Default)</option>
+                    <option value="light">Light Glass</option>
+                    <option value="solid-dark">Solid Dark</option>
+                    <option value="solid-light">Solid Light</option>
+                  </select>
+                </div>
+                <div class="form-field">
                   <label class="label">Background Image</label>
                   <div class="upload-group">
                     <img id="bg-preview" src="/favicon.ico" class="bg-preview-img" alt="Background">
@@ -824,6 +833,7 @@
       document.getElementById('avatar-preview').src = db.avatar_url || '/favicon.ico';
       document.getElementById('profile-bg-color').value = db.bg_color || '#f7f8fa';
       document.getElementById('profile-bg-color-picker').value = db.bg_color || '#f7f8fa';
+      document.getElementById('profile-theme-preset').value = db.theme_preset || 'dark';
       document.getElementById('profile-bg-image').value = db.bg_image_url || '';
       document.getElementById('bg-preview').src = db.bg_image_url || '/favicon.ico';
       document.getElementById('bg-position-x').value = db.bg_position_x ?? 50;
@@ -993,7 +1003,8 @@
           bio_text: document.getElementById('profile-bio').value,
           show_bio: document.getElementById('profile-bio-show').checked,
           youtube_video_url: document.getElementById('profile-youtube-video').value.trim(),
-          show_youtube_video: document.getElementById('profile-youtube-video-show').checked
+          show_youtube_video: document.getElementById('profile-youtube-video-show').checked,
+          theme_preset: document.getElementById('profile-theme-preset').value
         })
       });
       showToast('Profile updated.', 'success');

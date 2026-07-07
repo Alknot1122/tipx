@@ -48,6 +48,8 @@ CREATE TABLE users (
     avatar_url              VARCHAR(512),                          -- Custom profile avatar
     bg_color                VARCHAR(7)   DEFAULT '#0B0E14',        -- Custom page background color (Hex)
     bg_image_url            VARCHAR(512),                          -- Custom page background image
+    theme_preset            VARCHAR(20)  DEFAULT 'dark',           -- UI theme preset
+
     avatar_focal_x          INT          DEFAULT 50,                -- avatar focal X% (0-100)
     avatar_focal_y          INT          DEFAULT 50,                -- avatar focal Y% (0-100)
     bg_position_x           INT          DEFAULT 50,                -- background position X% (0-100)

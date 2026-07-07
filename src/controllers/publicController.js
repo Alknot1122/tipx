@@ -15,7 +15,7 @@ const getPublicPage = async (req, res) => {
               u.twitter_username, u.show_twitter_link,
               u.bio_text, u.show_bio,
               u.youtube_video_url, u.show_youtube_video,
-              u.avatar_url, u.bg_color, u.bg_image_url,
+              u.avatar_url, u.bg_color, u.bg_image_url, u.theme_preset,
               u.avatar_focal_x, u.avatar_focal_y, u.bg_position_x, u.bg_position_y, u.bg_scale,
               ws.goal_amount, ws.goal_current, ws.goal_start_date, ws.progress_config
        FROM users u
