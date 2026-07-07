@@ -48,10 +48,31 @@ router.post('/:slug/upload', uploadLimiter, requireAuth, requireSelf, upload.sin
     const randomSuffix = crypto.randomBytes(4).toString('hex');
     const filename = `${folder}/${slug}_${Date.now()}_${randomSuffix}.webp`;
 
+    let imageBuffer = req.file.buffer;
+
+    try {
+      const sharp = require('sharp');
+      if (type === 'background') {
+        // High quality webp for background, but optimized
+        imageBuffer = await sharp(req.file.buffer)
+          .webp({ quality: 85, effort: 6 }) // quality 85 is very clear, effort 6 compresses well
+          .toBuffer();
+      } else {
+        // Avatars can be smaller
+        imageBuffer = await sharp(req.file.buffer)
+          .resize({ width: 500, height: 500, fit: 'cover' })
+          .webp({ quality: 80, effort: 4 })
+          .toBuffer();
+      }
+    } catch (err) {
+      console.error('[Upload] Error processing image with sharp, uploading original buffer instead:', err);
+      // Fallback to original buffer if sharp fails or is not installed
+    }
+
     const command = new PutObjectCommand({
       Bucket: bucketName,
       Key: filename,
-      Body: req.file.buffer,
+      Body: imageBuffer,
       ContentType: 'image/webp',
     });
 
