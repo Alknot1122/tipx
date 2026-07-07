@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TipX - Interactive Digital Entertainment Service</title>
+  <meta name="description" content="TipX is an interactive digital entertainment service. Purchase digital goods and services to display your messages and alerts on live streams.">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #5b5fc7;
+      --bg: #0f172a;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --border: rgba(255, 255, 255, 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Navbar */
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 24px 5%;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.05em;
+    }
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      margin-left: 24px;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover {
+      color: var(--text);
+    }
+
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      padding: 100px 5% 80px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .hero h1 {
+      font-size: 48px;
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 24px;
+      letter-spacing: -0.03em;
+    }
+    .hero p {
+      font-size: 18px;
+      color: var(--text-muted);
+      margin-bottom: 40px;
+    }
+
+    /* Features Grid */
+    .features-container {
+      max-width: 1000px;
+      margin: 0 auto 100px;
+      padding: 0 5%;
+    }
+    .section-title {
+      text-align: center;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--primary);
+      font-weight: 600;
+      margin-bottom: 40px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: var(--primary);
+    }
+    .card-icon {
+      font-size: 32px;
+      margin-bottom: 20px;
+    }
+    .card h3 {
+      font-size: 20px;
+      margin-bottom: 12px;
+    }
+    .card p {
+      font-size: 15px;
+      color: var(--text-muted);
+    }
+
+    /* Compliance / Notice */
+    .compliance-box {
+      max-width: 800px;
+      margin: 0 auto 100px;
+      padding: 32px;
+      background: rgba(91, 95, 199, 0.1);
+      border: 1px solid rgba(91, 95, 199, 0.3);
+      border-radius: 16px;
+      text-align: center;
+    }
+    .compliance-box h3 {
+      font-size: 18px;
+      margin-bottom: 12px;
+    }
+    .compliance-box p {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 5%;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-bottom: 20px;
+    }
+    .footer-links a {
+      color: var(--text);
+      text-decoration: none;
+    }
+    .footer-links a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 36px; }
+      .hero p { font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="logo">TipX</div>
+    <div class="nav-links">
+      <a href="/login">Creator Login</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <h1>Interactive Digital Entertainment Service</h1>
+    <p>TipX is a digital storefront that allows viewers to purchase the ability to interact with live broadcasts. Buy and display custom messages, digital items, and alerts instantly on your favorite creator's stream.</p>
+  </section>
+
+  <div class="features-container">
+    <div class="section-title">Products & Services We Sell</div>
+    <div class="grid">
+      
+      <div class="card">
+        <div class="card-icon">💬</div>
+        <h3>On-Stream Messaging</h3>
+        <p>Purchase the right to display your custom name and message directly on the broadcaster's livestream screen for all viewers to see.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-icon">✨</div>
+        <h3>Digital Alert Items</h3>
+        <p>Trigger digital visual effects, filters, and animations that appear alongside your message to enhance the interactive experience.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-icon">🔊</div>
+        <h3>Text-to-Speech (TTS)</h3>
+        <p>Your purchased messages can be automatically read aloud by our digital TTS system during the live broadcast.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="compliance-box">
+    <h3>Business Model Disclaimer</h3>
+    <p>TipX is strictly an e-commerce platform for interactive digital services. Every transaction is a direct purchase of a digital good (on-stream messages/alerts) that is delivered immediately to the streaming software. We are <strong>not</strong> a charity, fundraising, or tipping/donation platform.</p>
+  </div>
+
+  <footer>
+    <div class="footer-links">
+      <a href="/terms">Terms of Service</a>
+      <a href="/privacy">Privacy Policy</a>
+    </div>
+    <p>&copy; 2026 TipX by Re:CodeX. All rights reserved.</p>
+    <p style="margin-top: 8px;">Contact: recodex.official@gmail.com</p>
+  </footer>
+
+</body>
+</html>
