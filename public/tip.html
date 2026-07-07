@@ -409,6 +409,84 @@
     body.theme-dark .footer-links a { color: rgba(255,255,255,0.4); }
     body.theme-dark .footer-links a:hover { color: #fff; }
 
+    /* ─── Welcome Modal ───────────────────── */
+    #welcome-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    #welcome-modal.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .modal-box {
+      background: #fff;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 400px;
+      padding: 28px 24px;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.15);
+      transform: translateY(16px) scale(0.96);
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #welcome-modal.active .modal-box {
+      transform: translateY(0) scale(1);
+    }
+    .modal-box h3 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+    .modal-box p.modal-desc {
+      font-size: 14px;
+      color: var(--text-2);
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+    .modal-scroll {
+      max-height: 180px;
+      overflow-y: auto;
+      background: #fafafa;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 13px;
+      color: var(--text-2);
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+    .modal-scroll strong { color: var(--text); font-weight: 600; }
+    .modal-scroll p { margin-bottom: 8px; }
+    .modal-scroll p:last-child { margin-bottom: 0; }
+    
+    body.theme-glass .modal-box,
+    body.theme-dark .modal-box {
+      background: #1e293b;
+      color: #fff;
+    }
+    body.theme-glass .modal-scroll,
+    body.theme-dark .modal-scroll {
+      background: rgba(0,0,0,0.2);
+      border-color: rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.7);
+    }
+    body.theme-glass .modal-scroll strong,
+    body.theme-dark .modal-scroll strong { color: #fff; }
+    body.theme-glass .modal-box h3,
+    body.theme-dark .modal-box h3 { color: #fff; }
+
     /* ─── Back link ───────────────────────── */
     .back-link {
       display: inline-flex;
@@ -701,6 +779,28 @@
 </div>
 
 <div id="toast-root"></div>
+
+<!-- Welcome Modal -->
+<div id="welcome-modal">
+  <div class="modal-box">
+    <h3>ยินดีต้อนรับสู่ TipX! 🚀</h3>
+    <p class="modal-desc">เพื่อให้สอดคล้องกับข้อกำหนดการให้บริการ กรุณาทำความเข้าใจรูปแบบบริการของเราก่อนดำเนินการต่อ</p>
+    
+    <div class="modal-scroll">
+      <p><strong>ไม่ใช่แพลตฟอร์มรับบริจาค:</strong> TipX คือบริการความบันเทิงดิจิทัลแบบมีส่วนร่วม (Interactive Digital Entertainment Service)</p>
+      <p><strong>สิ่งที่คุณกำลังจะซื้อ:</strong> คุณกำลังสั่งซื้อบริการ "ส่งข้อความขึ้นไปแสดงบนหน้าจอไลฟ์สตรีม" ซึ่งเป็นการซื้อสินค้า/บริการดิจิทัลที่ส่งมอบทันที</p>
+      <p><strong>ไม่สามารถขอคืนเงินได้:</strong> เนื่องจากบริการดิจิทัลถูกส่งมอบทันที การทำรายการทั้งหมดจึงไม่สามารถขอคืนเงินได้</p>
+      <p>การดำเนินการต่อถือว่าคุณยอมรับ <a href="/terms" target="_blank" style="color:var(--indigo);font-weight:500;">ข้อกำหนดการใช้บริการ</a> และ <a href="/privacy" target="_blank" style="color:var(--indigo);font-weight:500;">นโยบายความเป็นส่วนตัว</a> ของเราแล้ว</p>
+    </div>
+
+    <label class="privacy-check" style="margin-bottom: 20px;">
+      <input type="checkbox" id="welcome-agree-cb">
+      <span>ฉันเข้าใจและยอมรับข้อกำหนดทั้งหมด</span>
+    </label>
+
+    <button class="btn-main" id="btn-welcome-ok" disabled style="opacity:0.4">เข้าสู่เว็บไซต์</button>
+  </div>
+</div>
 
 <div class="page">
 
@@ -1230,6 +1330,35 @@
         toast('การชำระเงินไม่สำเร็จ');
       }
     }
+  })();
+
+  // ── Welcome Modal ──────────────────────────────────
+  (function initWelcomeModal() {
+    const modal = document.getElementById('welcome-modal');
+    const cb = document.getElementById('welcome-agree-cb');
+    const btn = document.getElementById('btn-welcome-ok');
+    
+    if (!localStorage.getItem('tipx_welcome_seen')) {
+      // Show modal after a short delay
+      setTimeout(() => {
+        modal.classList.add('active');
+      }, 600);
+    }
+
+    cb.addEventListener('change', () => {
+      if (cb.checked) {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+      } else {
+        btn.disabled = true;
+        btn.style.opacity = '0.4';
+      }
+    });
+
+    btn.addEventListener('click', () => {
+      localStorage.setItem('tipx_welcome_seen', 'true');
+      modal.classList.remove('active');
+    });
   })();
 
   // Minimal apiFetch if not loaded by api.js (fallback)
