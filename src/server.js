@@ -97,6 +97,10 @@ app.use(helmet({
       objectSrc: ["'none'"],
     },
   },
+  crossOriginResourcePolicy: false,
+  referrerPolicy: {
+    policy: ["strict-origin-when-cross-origin"]
+  }
 }));
 
 // CORS — strict: only allow our own domain
