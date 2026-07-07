@@ -409,6 +409,9 @@
     body.theme-dark .footer-links a { color: rgba(255,255,255,0.4); }
     body.theme-dark .footer-links a:hover { color: #fff; }
 
+    body.theme-glass #bio-box { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.85); border: 1px solid rgba(255,255,255,0.15); }
+    body.theme-dark #bio-box { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.8); border: 1px solid rgba(255,255,255,0.1); }
+
     /* ─── Welcome Modal ───────────────────── */
     #welcome-modal {
       position: fixed;
@@ -829,6 +832,11 @@
     <div class="avatar" id="avatar">?</div>
     <div class="creator-name" id="creator-name">Loading…</div>
     <div class="creator-handle" id="creator-handle"></div>
+    <a id="twitch-btn" href="#" target="_blank" style="display: none; align-items: center; gap: 6px; background: #9146FF; color: white; padding: 6px 12px; border-radius: 99px; text-decoration: none; font-size: 13px; font-weight: 600; margin-top: 14px; transition: opacity 0.2s; box-shadow: 0 4px 12px rgba(145, 70, 255, 0.3);">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/></svg>
+      Twitch
+    </a>
+    <div id="bio-box" style="display: none; margin-top: 20px; font-size: 13.5px; color: var(--text-2); line-height: 1.6; width: 100%; max-width: 420px; white-space: pre-wrap; padding: 16px 20px; background: #fff; border: 1.5px solid var(--border); border-radius: 12px; text-align: left;"></div>
   </div>
 
   <!-- Goal -->
@@ -1021,6 +1029,18 @@
       document.getElementById('creator-name').textContent = s.username;
       document.getElementById('creator-handle').textContent = '@' + s.slug;
       document.getElementById('pay-creator-name').textContent = s.username;
+
+      if (s.show_twitch_link && s.twitch_username) {
+        const tb = document.getElementById('twitch-btn');
+        tb.style.display = 'inline-flex';
+        tb.href = 'https://twitch.tv/' + s.twitch_username;
+      }
+      
+      if (s.show_bio && s.bio_text) {
+        const bb = document.getElementById('bio-box');
+        bb.style.display = 'block';
+        bb.textContent = s.bio_text;
+      }
 
       const av = document.getElementById('avatar');
       av.innerHTML = '';

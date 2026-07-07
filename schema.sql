@@ -35,6 +35,10 @@ CREATE TABLE users (
     role                    user_role    NOT NULL DEFAULT 'streamer',
     stripe_account_id       VARCHAR(255),                          -- Stripe Connect acct_xxx
     stripe_onboarding_done  BOOLEAN      NOT NULL DEFAULT FALSE,
+    twitch_username         VARCHAR(50),                           -- Twitch link
+    show_twitch_link        BOOLEAN      NOT NULL DEFAULT FALSE,   -- Toggle for twitch
+    bio_text                TEXT,                                  -- Bio intro text
+    show_bio                BOOLEAN      NOT NULL DEFAULT FALSE,   -- Toggle for bio
     avatar_url              VARCHAR(512),                          -- Custom profile avatar
     bg_color                VARCHAR(7)   DEFAULT '#0B0E14',        -- Custom page background color (Hex)
     bg_image_url            VARCHAR(512),                          -- Custom page background image

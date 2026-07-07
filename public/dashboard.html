@@ -602,6 +602,22 @@
                   <input class="input" type="text" id="profile-slug" placeholder="your-handle" maxlength="50" required>
                   <div class="text-xs text-muted" style="margin-top:4px">This changes your tip page URL: tip.re-codex.com/<span id="slug-preview">—</span></div>
                 </div>
+                <div class="form-field">
+                  <label class="label" for="profile-twitch">Twitch Username</label>
+                  <input class="input" type="text" id="profile-twitch" placeholder="alxo9">
+                  <div style="margin-top: 8px; display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="profile-twitch-show">
+                    <label for="profile-twitch-show" style="font-size: 13px; color: var(--text-2); cursor: pointer; margin: 0;">Show Twitch button</label>
+                  </div>
+                </div>
+                <div class="form-field span-2">
+                  <label class="label" for="profile-bio">Bio / Intro Text</label>
+                  <textarea class="input" id="profile-bio" rows="4" placeholder="i'm al. i doing a cover music..."></textarea>
+                  <div style="margin-top: 8px; display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="profile-bio-show">
+                    <label for="profile-bio-show" style="font-size: 13px; color: var(--text-2); cursor: pointer; margin: 0;">Show Bio text</label>
+                  </div>
+                </div>
                 <div class="form-field span-2">
                   <label class="label">Avatar Photo</label>
                   <div class="upload-group">
@@ -770,6 +786,10 @@
       document.getElementById('goal-start-date').value = db.goal_start_date ? db.goal_start_date.split('T')[0] : '';
       document.getElementById('profile-slug').value = db.slug || '';
       document.getElementById('slug-preview').textContent = db.slug || '—';
+      document.getElementById('profile-twitch').value = db.twitch_username || '';
+      document.getElementById('profile-twitch-show').checked = !!db.show_twitch_link;
+      document.getElementById('profile-bio').value = db.bio_text || '';
+      document.getElementById('profile-bio-show').checked = !!db.show_bio;
       document.getElementById('profile-avatar').value = db.avatar_url || '';
       document.getElementById('avatar-preview').src = db.avatar_url || '/favicon.ico';
       document.getElementById('profile-bg-color').value = db.bg_color || '#f7f8fa';
@@ -933,7 +953,11 @@
           bg_color: document.getElementById('profile-bg-color').value,
           bg_image_url: document.getElementById('profile-bg-image').value,
           bg_position_x: document.getElementById('bg-position-x').value,
-          bg_position_y: document.getElementById('bg-position-y').value
+          bg_position_y: document.getElementById('bg-position-y').value,
+          twitch_username: document.getElementById('profile-twitch').value.trim(),
+          show_twitch_link: document.getElementById('profile-twitch-show').checked,
+          bio_text: document.getElementById('profile-bio').value,
+          show_bio: document.getElementById('profile-bio-show').checked
         })
       });
       showToast('Profile updated.', 'success');

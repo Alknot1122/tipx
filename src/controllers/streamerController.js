@@ -15,6 +15,7 @@ const getDashboard = async (req, res) => {
     const { rows: userRows } = await query(
       `SELECT u.id, u.role, u.username, u.slug, u.email, u.is_active,
               u.stripe_account_id, u.stripe_onboarding_done,
+              u.twitch_username, u.show_twitch_link, u.bio_text, u.show_bio,
               u.avatar_url, u.bg_color, u.bg_image_url,
               u.avatar_focal_x, u.avatar_focal_y, u.bg_position_x, u.bg_position_y, u.bg_scale,
               ws.alert_token, ws.alert_config, ws.progress_config,
@@ -48,6 +49,7 @@ const getDashboard = async (req, res) => {
       const { rows: updatedRows } = await query(
         `SELECT u.id, u.role, u.username, u.slug, u.email, u.is_active,
                 u.stripe_account_id, u.stripe_onboarding_done,
+                u.twitch_username, u.show_twitch_link, u.bio_text, u.show_bio,
                 u.avatar_url, u.bg_color, u.bg_image_url,
               u.avatar_focal_x, u.avatar_focal_y, u.bg_position_x, u.bg_position_y, u.bg_scale,
                 ws.alert_token, ws.alert_config, ws.progress_config,
@@ -378,7 +380,8 @@ const deleteR2FileByUrl = async (url) => {
 const updateProfile = async (req, res) => {
   const { slug } = req.params;
   const { slug: newSlug, avatar_url, bg_color, bg_image_url,
-          avatar_focal_x, avatar_focal_y, bg_position_x, bg_position_y, bg_scale } = req.body;
+          avatar_focal_x, avatar_focal_y, bg_position_x, bg_position_y, bg_scale,
+          twitch_username, show_twitch_link, bio_text, show_bio } = req.body;
 
   if (bg_color && !/^#[0-9A-Fa-f]{6}$/.test(bg_color)) {
     return res.status(400).json({ error: 'Invalid background color format. Must be a 6-digit hex color starting with #.' });
@@ -408,14 +411,17 @@ const updateProfile = async (req, res) => {
       `UPDATE users
        SET slug = $1, avatar_url = $2, bg_color = $3, bg_image_url = $4,
            avatar_focal_x = $5, avatar_focal_y = $6,
-           bg_position_x = $7, bg_position_y = $8, bg_scale = $9, updated_at = NOW()
-       WHERE slug = $10 AND (role = 'streamer' OR role = 'admin') AND is_active = true
+           bg_position_x = $7, bg_position_y = $8, bg_scale = $9,
+           twitch_username = $10, show_twitch_link = $11, bio_text = $12, show_bio = $13, updated_at = NOW()
+       WHERE slug = $14 AND (role = 'streamer' OR role = 'admin') AND is_active = true
        RETURNING id, username, slug, avatar_url, bg_color, bg_image_url,
-                 avatar_focal_x, avatar_focal_y, bg_position_x, bg_position_y, bg_scale`,
+                 avatar_focal_x, avatar_focal_y, bg_position_x, bg_position_y, bg_scale,
+                 twitch_username, show_twitch_link, bio_text, show_bio`,
       [resolvedSlug, avatar_url || null, bg_color || '#0B0E14', bg_image_url || null,
        parseInt(avatar_focal_x) || 50, parseInt(avatar_focal_y) || 50,
        parseInt(bg_position_x) || 50, parseInt(bg_position_y) || 50,
        parseInt(bg_scale) || 100,
+       twitch_username || null, !!show_twitch_link, bio_text || null, !!show_bio,
        slug]
     );
 
