@@ -152,8 +152,8 @@ const noCache = (req, res, next) => {
 
 // ── HTML Page Routes ──────────────────────────────────────────────────────────
 
-app.get('/', noCache, (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
+app.get('/', (req, res) => {
+  res.redirect(302, '/al');
 });
 
 app.get('/login', noCache, (req, res) => {

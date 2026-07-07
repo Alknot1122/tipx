@@ -204,24 +204,68 @@ const generateAlertBoxHTML = (token, config) => {
       if (cfg.tts_enabled && tip.amount >= (cfg.tts_min_amount || 0)) {
         setTimeout(() => {
           const rawAmount = (tip.amount / 100).toFixed(0);
-          let speakText = \`\${tip.tipper_name} โดเนท \${rawAmount} บาท. \`;
-          if (tip.message && tip.message.trim()) {
-            speakText += \`ข้อความ. \${tip.message.trim()}\`;
-          }
-          
-          const utterance = new SpeechSynthesisUtterance(speakText);
-          utterance.volume = cfg.tts_volume !== undefined ? parseFloat(cfg.tts_volume) : 1.0;
-          
-          // Use Thai voice if available, else fall back to auto
+          const volume = cfg.tts_volume !== undefined ? parseFloat(cfg.tts_volume) : 1.0;
           const voices = window.speechSynthesis.getVoices();
-          const thVoice = voices.find(v => v.lang.startsWith('th'));
-          if (thVoice) {
-            utterance.voice = thVoice;
-          } else {
-            utterance.lang = 'th-TH';
-          }
           
-          window.speechSynthesis.speak(utterance);
+          function getVoiceForLang(langCode) {
+            let voice = voices.find(v => v.lang.toLowerCase() === langCode.toLowerCase());
+            if (!voice) {
+              const prefix = langCode.split('-')[0].toLowerCase();
+              voice = voices.find(v => v.lang.toLowerCase().startsWith(prefix));
+            }
+            return voice;
+          }
+
+          const thVoice = getVoiceForLang('th-TH');
+
+          // 1. Speak Intro in Thai
+          const introText = \`\${tip.tipper_name} โดเนท \${rawAmount} บาท. \`;
+          const introUtterance = new SpeechSynthesisUtterance(introText);
+          introUtterance.volume = volume;
+          if (thVoice) {
+            introUtterance.voice = thVoice;
+          } else {
+            introUtterance.lang = 'th-TH';
+          }
+          window.speechSynthesis.speak(introUtterance);
+
+          // 2. Speak Message (Detect language)
+          if (tip.message && tip.message.trim()) {
+            const cleanMsg = tip.message.trim();
+            
+            // Simple regex detection for common stream languages
+            let lang = 'en-US';
+            if (/[\u0e00-\u0e7f]/.test(cleanMsg)) {
+              lang = 'th-TH';
+            } else if (/[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]/.test(cleanMsg)) {
+              lang = 'ja-JP';
+            } else if (/[\uac00-\ud7a3]/.test(cleanMsg)) {
+              lang = 'ko-KR';
+            } else if (/[\u4e00-\u9fff]/.test(cleanMsg)) {
+              lang = 'zh-CN';
+            }
+
+            // Speak 'ข้อความ' prefix in Thai first
+            const prefixUtterance = new SpeechSynthesisUtterance('ข้อความ. ');
+            prefixUtterance.volume = volume;
+            if (thVoice) {
+              prefixUtterance.voice = thVoice;
+            } else {
+              prefixUtterance.lang = 'th-TH';
+            }
+            window.speechSynthesis.speak(prefixUtterance);
+
+            // Speak message in its matching language
+            const msgUtterance = new SpeechSynthesisUtterance(cleanMsg);
+            msgUtterance.volume = volume;
+            const msgVoice = getVoiceForLang(lang);
+            if (msgVoice) {
+              msgUtterance.voice = msgVoice;
+            } else {
+              msgUtterance.lang = lang;
+            }
+            window.speechSynthesis.speak(msgUtterance);
+          }
         }, 1200);
       }
 

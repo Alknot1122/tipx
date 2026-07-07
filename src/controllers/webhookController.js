@@ -10,17 +10,29 @@ const { getIO } = require('../websockets/widgetSocket');
  */
 const handleStripeWebhook = async (req, res) => {
   const sig = req.headers['stripe-signature'];
+  const connectedAccountId = req.headers['stripe-account']; // present for Connect webhook events
+
+  // Choose the appropriate webhook secret:
+  //   - If the event is from a connected account (stripe-account header is set), use STRIPE_CONNECT_WEBHOOK_SECRET
+  //   - Otherwise use the platform STRIPE_WEBHOOK_SECRET
+  const webhookSecret = connectedAccountId
+    ? process.env.STRIPE_CONNECT_WEBHOOK_SECRET
+    : process.env.STRIPE_WEBHOOK_SECRET;
 
   let event;
   try {
     event = stripe.webhooks.constructEvent(
-      req.body,                           // raw Buffer
+      req.body,        // raw Buffer
       sig,
-      process.env.STRIPE_WEBHOOK_SECRET
+      webhookSecret
     );
   } catch (err) {
     console.warn('[Webhook] Signature verification failed:', err.message);
     return res.status(400).json({ error: 'Webhook signature verification failed.' });
+  }
+
+  if (connectedAccountId) {
+    console.log(`[Webhook] Connect event from account ${connectedAccountId}: ${event.type}`);
   }
 
   // ── Handle payment_intent.succeeded ────────────────────────────────────────
