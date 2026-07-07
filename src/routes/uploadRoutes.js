@@ -55,7 +55,7 @@ router.post('/:slug/upload', uploadLimiter, requireAuth, requireSelf, upload.sin
       if (type === 'background') {
         // High quality webp for background, but optimized
         imageBuffer = await sharp(req.file.buffer)
-          .webp({ quality: 85, effort: 6 }) // quality 85 is very clear, effort 6 compresses well
+          .webp({ quality: 95, effort: 6 }) // quality 95 is extremely clear
           .toBuffer();
       } else {
         // Avatars can be smaller

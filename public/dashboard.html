@@ -1207,7 +1207,7 @@
   }
 
   // Handle uploading and compression
-  async function handleFileUpload(fileInputId, type, previewImgId, statusSpanId, textInputId, maxWidth, maxHeight) {
+  async function handleFileUpload(fileInputId, type, previewImgId, statusSpanId, textInputId, maxWidth, maxHeight, quality = 0.92) {
     const fileInput = document.getElementById(fileInputId);
     const statusSpan = document.getElementById(statusSpanId);
     const file = fileInput.files[0];
@@ -1215,7 +1215,7 @@
 
     statusSpan.textContent = 'Compressing...';
     try {
-      const compressedBlob = await compressImage(file, maxWidth, maxHeight, 0.92);
+      const compressedBlob = await compressImage(file, maxWidth, maxHeight, quality);
       statusSpan.textContent = 'Uploading...';
 
       const formData = new FormData();
@@ -1242,7 +1242,7 @@
   });
 
   document.getElementById('file-bg').addEventListener('change', () => {
-    handleFileUpload('file-bg', 'background', 'bg-preview', 'upload-status-bg', 'profile-bg-image', 1920, 1080);
+    handleFileUpload('file-bg', 'background', 'bg-preview', 'upload-status-bg', 'profile-bg-image', 2560, 1440, 0.98);
   });
 
   // Dynamic preview for URL fallbacks
