@@ -383,22 +383,31 @@
     .btn-main.green:hover:not(:disabled) { background: #16a34a; }
 
     /* ─── Glassmorphism & Dark Themes ─────── */
+    body.theme-glass .form-col {
+      padding: 32px;
+      border-radius: 24px;
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.3);
+    }
     body.theme-glass input, 
     body.theme-glass textarea, 
     body.theme-glass .preset-btn {
-      background: rgba(255, 255, 255, 0.07);
-      backdrop-filter: blur(32px);
-      -webkit-backdrop-filter: blur(32px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      border: 1px solid rgba(255, 255, 255, 0.1);
       color: #fff;
     }
     body.theme-glass input::placeholder, 
     body.theme-glass textarea::placeholder {
-      color: rgba(255, 255, 255, 0.6);
+      color: rgba(255, 255, 255, 0.5);
     }
     body.theme-glass input:focus, 
     body.theme-glass textarea:focus {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.08);
       border-color: rgba(255, 255, 255, 0.3);
       box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
     }
@@ -428,7 +437,7 @@
     body.theme-glass .sep { background: rgba(255,255,255,0.15); }
     body.theme-glass .back-link { color: rgba(255,255,255,0.6); }
     body.theme-glass .back-link:hover { color: #fff; }
-    body.theme-glass .legal-block { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.1); }
+    body.theme-glass .legal-block { background: transparent; border-color: rgba(255,255,255,0.1); }
     body.theme-glass .legal-block p { color: rgba(255,255,255,0.65); }
     body.theme-glass .legal-block strong { color: rgba(255,255,255,0.9); }
     body.theme-glass .footer-links a { color: rgba(255,255,255,0.5); }
@@ -465,17 +474,33 @@
     body.theme-dark .footer-links a { color: rgba(255,255,255,0.4); }
     body.theme-dark .footer-links a:hover { color: #fff; }
 
-    body.theme-glass #bio-box { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.85); border: 1px solid rgba(255,255,255,0.15); }
+    body.theme-glass #bio-box { 
+      background: rgba(0,0,0,0.45); 
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      color: rgba(255,255,255,0.9); 
+      border: 1px solid rgba(255,255,255,0.1); 
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
     body.theme-dark #bio-box { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.8); border: 1px solid rgba(255,255,255,0.1); }
 
     /* For Light Glass (White Transparency) */
+    body.theme-light-glass .form-col {
+      padding: 32px;
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.1);
+    }
     body.theme-light-glass input, 
     body.theme-light-glass textarea, 
     body.theme-light-glass .preset-btn {
-      background: rgba(255, 255, 255, 0.5);
-      backdrop-filter: blur(32px);
-      -webkit-backdrop-filter: blur(32px);
-      border: 1px solid rgba(0, 0, 0, 0.12);
+      background: rgba(255, 255, 255, 0.4);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      border: 1px solid rgba(0, 0, 0, 0.08);
       color: #111;
     }
     body.theme-light-glass input::placeholder, 
@@ -505,12 +530,19 @@
     body.theme-light-glass .sep { background: rgba(0,0,0,0.1); }
     body.theme-light-glass .back-link { color: rgba(0,0,0,0.6); }
     body.theme-light-glass .back-link:hover { color: #111; }
-    body.theme-light-glass .legal-block { background: rgba(255,255,255,0.4); border-color: rgba(0,0,0,0.1); }
+    body.theme-light-glass .legal-block { background: transparent; border-color: rgba(0,0,0,0.1); }
     body.theme-light-glass .legal-block p { color: rgba(0,0,0,0.65); }
     body.theme-light-glass .legal-block strong { color: rgba(0,0,0,0.9); }
     body.theme-light-glass .footer-links a { color: rgba(0,0,0,0.5); }
     body.theme-light-glass .footer-links a:hover { color: #111; }
-    body.theme-light-glass #bio-box { background: rgba(255,255,255,0.6); color: rgba(0,0,0,0.85); border: 1px solid rgba(0,0,0,0.15); }
+    body.theme-light-glass #bio-box { 
+      background: rgba(255,255,255,0.75); 
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      color: rgba(0,0,0,0.9); 
+      border: 1px solid rgba(255,255,255,0.6); 
+      box-shadow: 0 8px 32px rgba(0,0,0,0.05);
+    }
 
     /* ─── Welcome Modal ───────────────────── */
     #welcome-modal {
@@ -880,8 +912,8 @@
     }
 
     @media (max-width: 480px) {
-      .page { padding: 32px 20px calc(48px + var(--safe-bottom)); justify-content: flex-start; padding-top: 48px; }
-      .creator { margin-bottom: 32px; }
+      .page { padding: 24px 16px calc(48px + var(--safe-bottom)); justify-content: flex-start; padding-top: 32px; }
+      .creator { margin-bottom: 24px; }
       .creator-name { font-size: 20px; }
       .avatar { width: 96px; height: 96px; font-size: 34px; margin-bottom: 16px; }
       .amount-summary { font-size: 28px; }
@@ -890,6 +922,10 @@
       .legal-block p { font-size: 11px; }
       .success-circle { width: 64px; height: 64px; font-size: 28px; }
       .success-wrap h2 { font-size: 20px; }
+      body.theme-glass .form-col, body.theme-light-glass .form-col {
+        padding: 24px 16px;
+        border-radius: 20px;
+      }
     }
   </style>
 </head>
