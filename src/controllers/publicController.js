@@ -9,7 +9,7 @@ const getPublicPage = async (req, res) => {
 
   try {
     const { rows } = await query(
-      `SELECT u.role, u.username, u.slug, u.stripe_account_id, u.stripe_onboarding_done,
+      `SELECT u.role, u.username, u.slug, u.stripe_account_id, u.stripe_onboarding_done, u.accept_donations,
               u.twitch_username, u.show_twitch_link, 
               u.youtube_username, u.show_youtube_link,
               u.twitter_username, u.show_twitter_link,
@@ -69,13 +69,17 @@ const createPaymentIntent = async (req, res) => {
 
   try {
     const { rows } = await query(
-      `SELECT id, stripe_account_id, stripe_onboarding_done, role, slug, username
+      `SELECT id, stripe_account_id, stripe_onboarding_done, role, slug, username, accept_donations
        FROM users WHERE slug = $1 AND (role = 'streamer' OR role = 'admin') AND is_active = true`,
       [slug]
     );
 
     if (!rows.length) return res.status(404).json({ error: 'Streamer not found.' });
     const streamer = rows[0];
+
+    if (!streamer.accept_donations) {
+      return res.status(403).json({ error: 'This streamer is not currently accepting donations.' });
+    }
 
     // Compute fees (exempt admin users or user 'al')
     const isFeeExempt = streamer.role === 'admin' || streamer.slug === 'al' || streamer.username === 'al';

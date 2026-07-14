@@ -56,6 +56,7 @@ CREATE TABLE users (
     bg_position_y           INT          DEFAULT 50,                -- background position Y% (0-100)
     bg_scale                INT          DEFAULT 100,               -- background zoom % (100 = actual)
     is_active               BOOLEAN      NOT NULL DEFAULT TRUE,    -- soft-disable accounts
+    accept_donations        BOOLEAN      NOT NULL DEFAULT TRUE,    -- Toggle to accept donations
     created_at              TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at              TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );

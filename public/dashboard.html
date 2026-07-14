@@ -591,6 +591,22 @@
         </div>
 
         <form id="profile-settings-form">
+          <div class="section-card" style="margin-bottom:20px">
+            <div class="section-card-header">
+              <div class="section-card-title">Tip Settings</div>
+            </div>
+            <div class="section-card-body">
+              <div class="settings-grid">
+                <div class="form-field">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="profile-accept-donations" checked>
+                    <label class="label" for="profile-accept-donations" style="margin: 0; cursor: pointer;">Accept Donations</label>
+                  </div>
+                  <div class="text-xs text-muted" style="margin-top:4px; margin-left: 22px;">Allow viewers to send you tips on your page. Uncheck to temporarily close tips.</div>
+                </div>
+              </div>
+            </div>
+          </div>
           <div class="section-card">
             <div class="section-card-header">
               <div class="section-card-title">Page appearance</div>
@@ -818,6 +834,7 @@
       document.getElementById('goal-amount').value = db.goal_amount / 100;
       document.getElementById('goal-start-date').value = db.goal_start_date ? db.goal_start_date.split('T')[0] : '';
       document.getElementById('profile-slug').value = db.slug || '';
+      document.getElementById('profile-accept-donations').checked = db.accept_donations !== false;
       document.getElementById('slug-preview').textContent = db.slug || '—';
       document.getElementById('profile-twitch').value = db.twitch_username || '';
       document.getElementById('profile-twitch-show').checked = !!db.show_twitch_link;
@@ -1004,7 +1021,8 @@
           show_bio: document.getElementById('profile-bio-show').checked,
           youtube_video_url: document.getElementById('profile-youtube-video').value.trim(),
           show_youtube_video: document.getElementById('profile-youtube-video-show').checked,
-          theme_preset: document.getElementById('profile-theme-preset').value
+          theme_preset: document.getElementById('profile-theme-preset').value,
+          accept_donations: document.getElementById('profile-accept-donations').checked
         })
       });
       showToast('Profile updated.', 'success');

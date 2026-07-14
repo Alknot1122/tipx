@@ -1195,7 +1195,7 @@
       currentUser = s;
       stripeKey = data.stripe_public_key;
 
-      if (!s.stripe_onboarding_done) {
+      if (!s.accept_donations || !s.stripe_onboarding_done) {
         const btn = document.getElementById('btn-continue');
         btn.disabled = true;
         btn.textContent = 'Not accepting tips right now';

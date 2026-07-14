@@ -13,7 +13,7 @@ const getDashboard = async (req, res) => {
 
   try {
     const { rows: userRows } = await query(
-      `SELECT u.id, u.role, u.username, u.slug, u.email, u.is_active,
+      `SELECT u.id, u.role, u.username, u.slug, u.email, u.is_active, u.accept_donations,
               u.stripe_account_id, u.stripe_onboarding_done,
               u.twitch_username, u.show_twitch_link, 
               u.youtube_username, u.show_youtube_link,
@@ -51,7 +51,7 @@ const getDashboard = async (req, res) => {
       
       // Fetch again with the newly created widget settings
       const { rows: updatedRows } = await query(
-        `SELECT u.id, u.role, u.username, u.slug, u.email, u.is_active,
+        `SELECT u.id, u.role, u.username, u.slug, u.email, u.is_active, u.accept_donations,
                 u.stripe_account_id, u.stripe_onboarding_done,
                 u.twitch_username, u.show_twitch_link,
                 u.youtube_username, u.show_youtube_link,
@@ -394,7 +394,7 @@ const updateProfile = async (req, res) => {
           twitter_username, show_twitter_link,
           bio_text, show_bio,
           youtube_video_url, show_youtube_video,
-          theme_preset } = req.body;
+          theme_preset, accept_donations } = req.body;
 
   if (bg_color && !/^#[0-9A-Fa-f]{6}$/.test(bg_color)) {
     return res.status(400).json({ error: 'Invalid background color format. Must be a 6-digit hex color starting with #.' });
@@ -429,14 +429,14 @@ const updateProfile = async (req, res) => {
            youtube_username = $12, show_youtube_link = $13,
            twitter_username = $14, show_twitter_link = $15,
            bio_text = $16, show_bio = $17, 
-           youtube_video_url = $18, show_youtube_video = $19, theme_preset = $20, updated_at = NOW()
-       WHERE slug = $21 AND (role = 'streamer' OR role = 'admin') AND is_active = true
+           youtube_video_url = $18, show_youtube_video = $19, theme_preset = $20, accept_donations = $21, updated_at = NOW()
+       WHERE slug = $22 AND (role = 'streamer' OR role = 'admin') AND is_active = true
        RETURNING id, username, slug, avatar_url, bg_color, bg_image_url, theme_preset,
                  avatar_focal_x, avatar_focal_y, bg_position_x, bg_position_y, bg_scale,
                  twitch_username, show_twitch_link, 
                  youtube_username, show_youtube_link,
                  twitter_username, show_twitter_link,
-                 bio_text, show_bio, youtube_video_url, show_youtube_video`,
+                 bio_text, show_bio, youtube_video_url, show_youtube_video, accept_donations`,
       [resolvedSlug, avatar_url || null, bg_color || '#0B0E14', bg_image_url || null,
        parseInt(avatar_focal_x) || 50, parseInt(avatar_focal_y) || 50,
        parseInt(bg_position_x) || 50, parseInt(bg_position_y) || 50,
@@ -447,6 +447,7 @@ const updateProfile = async (req, res) => {
        bio_text || null, !!show_bio,
        youtube_video_url || null, !!show_youtube_video,
        theme_preset || 'dark',
+       accept_donations === undefined ? true : !!accept_donations,
        slug]
     );
 
